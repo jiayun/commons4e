@@ -30,6 +30,21 @@
             <separator name="langGroup"/>
          </menu>
          <action
+               label="Generate CompareTo Method..."
+               class="org.jiayun.commons4e.lang.actions.GenerateCompareToAction"
+               menubarPath="langMenu/langGroup"
+               id="org.jiayun.commons4e.lang.actions.GenerateCompareToAction"/>
+         <action
+               label="Generate ToString Method..."
+               class="org.jiayun.commons4e.lang.actions.GenerateToStringAction"
+               menubarPath="langMenu/langGroup"
+               id="org.jiayun.commons4e.lang.actions.GenerateToStringAction"/>
+         <action
+               label="Generate HashCode Method..."
+               class="org.jiayun.commons4e.lang.actions.GenerateHashCodeAction"
+               menubarPath="langMenu/langGroup"
+               id="org.jiayun.commons4e.lang.actions.GenerateHashCodeAction"/>
+         <action
                label="Generate Equals Method..."
                class="org.jiayun.commons4e.lang.actions.GenerateEqualsAction"
                menubarPath="langMenu/langGroup"
