@@ -3,6 +3,8 @@ package org.jiayun.commons4e.internal.util;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.eclipse.core.runtime.Preferences;
 import org.eclipse.jdt.core.Flags;
@@ -13,6 +15,7 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.ISourceReference;
 import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.ITypeHierarchy;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
@@ -30,6 +33,46 @@ import org.eclipse.swt.SWT;
 public final class JavaUtils {
 
     private JavaUtils() {
+    }
+
+    public static void addSuperInterface(final IType objectClass,
+            final String interfaceName) throws JavaModelException {
+
+        ITypeHierarchy typeHierarchy = objectClass.newSupertypeHierarchy(null);
+        IType[] interfaces = typeHierarchy.getAllInterfaces();
+        for (int i = 0, size = interfaces.length; i < size; i++) {
+            if (interfaces[i].getElementName().equals(interfaceName)) { return; }
+        }
+
+        ICompilationUnit cu = objectClass.getCompilationUnit();
+        IBuffer buffer = cu.getBuffer();
+        String contents = buffer.getContents();
+
+        Pattern pattern = Pattern.compile("class\\s+?"
+                + objectClass.getElementName() + "\\s.*?\\{");
+        Matcher matcher = pattern.matcher(contents);
+
+        while (matcher.find()) {
+            String str = matcher.group();
+            int position = contents.indexOf(str);
+            if (cu.getElementAt(position).getElementType() == IJavaElement.TYPE) {
+
+                int length = str.length();
+
+                String result;
+                if (str.indexOf("implements") != -1) {
+                    result = str.replaceFirst("implements", "implements "
+                            + interfaceName + ",");
+                } else {
+                    result = str.replaceFirst("\\{", "implements "
+                            + interfaceName + " {");
+                }
+
+                buffer.replace(position, length, result);
+
+                break;
+            }
+        }
     }
 
     public static IField[] getNonStaticFields(final IType objectClass)

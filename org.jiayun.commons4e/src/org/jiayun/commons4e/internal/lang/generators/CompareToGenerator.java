@@ -59,7 +59,7 @@ public final class CompareToGenerator implements ILangGenerator {
                             .getNonStaticFields(objectClass), excludedMethods);
             int returnCode = dialog.open();
             if (returnCode == Window.OK) {
-                
+
                 if (existingMethod.exists()) {
                     existingMethod.delete(true, null);
                 }
@@ -88,6 +88,8 @@ public final class CompareToGenerator implements ILangGenerator {
 
         ICompilationUnit cu = objectClass.getCompilationUnit();
         IEditorPart javaEditor = JavaUI.openInEditor(cu);
+
+        JavaUtils.addSuperInterface(objectClass, "Comparable");
 
         String source = createMethod(objectClass, checkedFields, appendSuper,
                 generateComment);
@@ -127,7 +129,8 @@ public final class CompareToGenerator implements ILangGenerator {
         StringBuffer content = new StringBuffer();
         if (generateComment) {
             content.append("/* (non-Javadoc)\n");
-            content.append(" * @see java.lang.Comparable#compareTo(java.lang.Object)\n");
+            content
+                    .append(" * @see java.lang.Comparable#compareTo(java.lang.Object)\n");
             content.append(" */\n");
         }
         content.append("public int compareTo(final Object other) {\n");
