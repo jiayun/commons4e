@@ -2,7 +2,7 @@
 <feature
       id="org.jiayun.commons4e"
       label="Commons4E"
-      version="1.0.1"
+      version="1.0.2"
       provider-name="JiaYun">
 
    <install-handler/>
@@ -315,6 +315,6 @@ POSSIBILITY OF SUCH DAMAGES.
          id="org.jiayun.commons4e"
          download-size="0"
          install-size="0"
-         version="1.0.1"/>
+         version="1.0.2"/>
 
 </feature>
