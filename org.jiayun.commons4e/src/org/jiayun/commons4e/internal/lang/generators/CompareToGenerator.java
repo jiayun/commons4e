@@ -12,6 +12,7 @@ import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.ToolFactory;
+import org.eclipse.jdt.core.compiler.InvalidInputException;
 import org.eclipse.jdt.core.formatter.CodeFormatter;
 import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -89,7 +90,13 @@ public final class CompareToGenerator implements ILangGenerator {
         ICompilationUnit cu = objectClass.getCompilationUnit();
         IEditorPart javaEditor = JavaUI.openInEditor(cu);
 
-        JavaUtils.addSuperInterface(objectClass, "Comparable");
+        try {
+            JavaUtils.addSuperInterface(objectClass, "Comparable");
+        } catch (InvalidInputException e) {
+            MessageDialog.openError(parentShell, "Error",
+                    "Failed to add Comparable to implements clause:\n"
+                            + e.getMessage());
+        }
 
         String source = createMethod(objectClass, checkedFields, appendSuper,
                 generateComment);

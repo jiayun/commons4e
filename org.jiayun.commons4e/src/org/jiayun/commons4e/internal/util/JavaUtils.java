@@ -3,8 +3,6 @@ package org.jiayun.commons4e.internal.util;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.eclipse.core.runtime.Preferences;
 import org.eclipse.jdt.core.Flags;
@@ -19,6 +17,10 @@ import org.eclipse.jdt.core.ITypeHierarchy;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
+import org.eclipse.jdt.core.ToolFactory;
+import org.eclipse.jdt.core.compiler.IScanner;
+import org.eclipse.jdt.core.compiler.ITerminalSymbols;
+import org.eclipse.jdt.core.compiler.InvalidInputException;
 import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants;
 import org.eclipse.swt.SWT;
 
@@ -36,7 +38,8 @@ public final class JavaUtils {
     }
 
     public static void addSuperInterface(final IType objectClass,
-            final String interfaceName) throws JavaModelException {
+            final String interfaceName) throws JavaModelException,
+            InvalidInputException {
 
         ITypeHierarchy typeHierarchy = objectClass.newSupertypeHierarchy(null);
         IType[] interfaces = typeHierarchy.getAllInterfaces();
@@ -46,33 +49,41 @@ public final class JavaUtils {
 
         ICompilationUnit cu = objectClass.getCompilationUnit();
         IBuffer buffer = cu.getBuffer();
-        String contents = buffer.getContents();
+        char[] source = buffer.getCharacters();
+        IScanner scanner = ToolFactory
+                .createScanner(false, false, false, false);
+        scanner.setSource(source);
+        scanner.resetTo(objectClass.getNameRange().getOffset(),
+                source.length - 1);
 
-        Pattern pattern = Pattern.compile("class\\s+?"
-                + objectClass.getElementName() + "\\s.*?\\{");
-        Matcher matcher = pattern.matcher(contents);
+        if (objectClass.getSuperInterfaceNames().length == 0) {
 
-        while (matcher.find()) {
-            String str = matcher.group();
-            int position = contents.indexOf(str);
-            if (cu.getElementAt(position).getElementType() == IJavaElement.TYPE) {
+            int type;
+            while (true) {
+                type = scanner.getNextToken();
+                if (type == ITerminalSymbols.TokenNameLBRACE) {
 
-                int length = str.length();
-
-                String result;
-                if (str.indexOf("implements") != -1) {
-                    result = str.replaceFirst("implements", "implements "
-                            + interfaceName + ",");
-                } else {
-                    result = str.replaceFirst("\\{", "implements "
-                            + interfaceName + " {");
+                    buffer.replace(scanner.getCurrentTokenStartPosition(), 0,
+                            "implements " + interfaceName + " ");
+                    break;
                 }
-
-                buffer.replace(position, length, result);
-
-                break;
             }
+
+        } else {
+
+            int type;
+            while (true) {
+                type = scanner.getNextToken();
+                if (type == ITerminalSymbols.TokenNameimplements) {
+
+                    buffer.replace(scanner.getCurrentTokenEndPosition() + 1, 0,
+                            " " + interfaceName + ",");
+                    break;
+                }
+            }
+
         }
+
     }
 
     public static IField[] getNonStaticFields(final IType objectClass)
