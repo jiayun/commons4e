@@ -1,0 +1,16 @@
+Manifest-Version: 1.0
+Bundle-Name: Commons4E
+Bundle-SymbolicName: org.jiayun.commons4e; singleton=true
+Bundle-Version: 1.0.4
+Bundle-ClassPath: commons4e.jar
+Bundle-Activator: org.jiayun.commons4e.Commons4ePlugin
+Bundle-Vendor: JiaYun
+Bundle-Localization: plugin
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.resources,
+ org.eclipse.core.runtime,
+ org.eclipse.jdt.ui,
+ org.eclipse.jdt.core,
+ org.eclipse.jface.text,
+ org.eclipse.ui.workbench.texteditor
+Eclipse-AutoStart: true
