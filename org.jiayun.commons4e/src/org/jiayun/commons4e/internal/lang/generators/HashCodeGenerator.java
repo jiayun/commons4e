@@ -493,29 +493,12 @@ public final class HashCodeGenerator implements ILangGenerator {
          * @see org.eclipse.swt.events.VerifyListener#verifyText(org.eclipse.swt.events.VerifyEvent)
          */
         public void verifyText(VerifyEvent e) {
-            String text = e.text;
-            for (int i = 0; i < text.length(); i++) {
-                if (i == 0 && text.charAt(i) == '-') {
-                    if (inputText.getText().length() != 0
-                            && (e.start != 0 || inputText.getText().startsWith(
-                                    "-"))) {
-                        e.doit = false;
-                        return;
-                    }
 
-                    if (text.length() == 1) {
-                        e.doit = true;
-                        return;
-                    }
-                } else if (!Character.isDigit(text.charAt(i))) {
-                    e.doit = false;
-                    return;
-                }
-            }
+            StringBuffer number = new StringBuffer(inputText.getText());
+            number.insert(e.start, e.text);
 
-            String number = inputText.getText() + text;
             try {
-                Integer.parseInt(number);
+                Integer.parseInt(number.toString());
             } catch (NumberFormatException nfe) {
                 e.doit = false;
                 return;
