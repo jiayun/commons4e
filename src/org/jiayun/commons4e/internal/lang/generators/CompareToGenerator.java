@@ -3,6 +3,9 @@
  */
 package org.jiayun.commons4e.internal.lang.generators;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IField;
@@ -46,12 +49,23 @@ public final class CompareToGenerator implements ILangGenerator {
      */
     public void generate(Shell parentShell, IType objectClass) {
 
+        IMethod existingMethod = objectClass.getMethod("compareTo",
+                new String[] { "QObject;" });
+        Set excludedMethods = new HashSet();
+        if (existingMethod.exists()) {
+            excludedMethods.add(existingMethod);
+        }
         try {
             FieldDialog dialog = new FieldDialog(parentShell,
                     "Generate CompareTo Method", objectClass, JavaUtils
-                            .getNonStaticFields(objectClass));
+                            .getNonStaticFields(objectClass), excludedMethods);
             int returnCode = dialog.open();
             if (returnCode == Window.OK) {
+                
+                if (existingMethod.exists()) {
+                    existingMethod.delete(true, null);
+                }
+
                 IField[] checkedFields = dialog.getCheckedFields();
                 IJavaElement insertPosition = dialog.getElementPosition();
                 boolean appendSuper = dialog.getAppendSuper();
@@ -76,12 +90,6 @@ public final class CompareToGenerator implements ILangGenerator {
 
         ICompilationUnit cu = objectClass.getCompilationUnit();
         IEditorPart javaEditor = JavaUI.openInEditor(cu);
-
-        IMethod existingMethod = objectClass.getMethod("compareTo",
-                new String[] { "QObject;" });
-        if (existingMethod.exists()) {
-            existingMethod.delete(true, null);
-        }
 
         String source = createMethod(objectClass, checkedFields, appendSuper,
                 generateComment);
@@ -124,7 +132,7 @@ public final class CompareToGenerator implements ILangGenerator {
             content.append(" * @see java.lang.Comparable#compareTo(java.lang.Object)\n");
             content.append(" */\n");
         }
-        content.append("public int compareTo(Object other) {\n");
+        content.append("public int compareTo(final Object other) {\n");
         content.append(objectClass.getElementName());
         content.append(" castOther = (");
         content.append(objectClass.getElementName());

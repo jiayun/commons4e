@@ -3,7 +3,7 @@
 <plugin
    id="org.jiayun.commons4e"
    name="Commons4E"
-   version="1.0.0"
+   version="1.0.1"
    provider-name="JiaYun"
    class="org.jiayun.commons4e.Commons4ePlugin">
 
@@ -20,6 +20,7 @@
       <import plugin="org.eclipse.jdt.ui"/>
       <import plugin="org.eclipse.jdt.core"/>
       <import plugin="org.eclipse.jface.text"/>
+      <import plugin="org.eclipse.ui.workbench.texteditor"/>
    </requires>
    <extension
          point="org.eclipse.ui.popupMenus">
@@ -27,7 +28,7 @@
             objectClass="org.eclipse.jdt.core.IType"
             id="org.jiayun.commons4e.lang.LangActions">
          <menu
-               label="Commons4e Lang"
+               label="Commons4E Lang"
                path="additions"
                id="langMenu">
             <separator name="langGroup"/>
@@ -53,6 +54,36 @@
                menubarPath="langMenu/langGroup"
                id="org.jiayun.commons4e.lang.actions.GenerateEqualsAction"/>
       </objectContribution>
+      <viewerContribution
+            targetID="#CompilationUnitEditorContext"
+            id="org.jiayun.commons4e.lang.LangActions">
+         <menu
+               label="Commons4E Lang"
+               path="additions"
+               id="langMenu">
+            <separator name="langGroup"/>
+         </menu>
+         <action
+               label="Generate CompareTo Method..."
+               class="org.jiayun.commons4e.internal.lang.actions.ViewerContributionGenerateAction"
+               menubarPath="langMenu/langGroup"
+               id="org.jiayun.commons4e.lang.actions.GenerateCompareToAction"/>
+         <action
+               label="Generate ToString Method..."
+               class="org.jiayun.commons4e.internal.lang.actions.ViewerContributionGenerateAction"
+               menubarPath="langMenu/langGroup"
+               id="org.jiayun.commons4e.lang.actions.GenerateToStringAction"/>
+         <action
+               label="Generate HashCode Method..."
+               class="org.jiayun.commons4e.internal.lang.actions.ViewerContributionGenerateAction"
+               menubarPath="langMenu/langGroup"
+               id="org.jiayun.commons4e.lang.actions.GenerateHashCodeAction"/>
+         <action
+               label="Generate Equals Method..."
+               class="org.jiayun.commons4e.internal.lang.actions.ViewerContributionGenerateAction"
+               menubarPath="langMenu/langGroup"
+               id="org.jiayun.commons4e.lang.actions.GenerateEqualsAction"/>
+      </viewerContribution>
    </extension>
 
 </plugin>

@@ -5,7 +5,9 @@ package org.jiayun.commons4e.internal.ui.dialogs;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
@@ -74,8 +76,18 @@ public class FieldDialog extends Dialog {
 
     private static final String SETTINGS_GENERATE_COMMENT = "GenerateComment";
 
-    public FieldDialog(Shell parentShell, String dialogTitle,
-            IType objectClass, IField[] fields) throws JavaModelException {
+    /**
+     * @param parentShell
+     * @param dialogTitle
+     * @param objectClass
+     * @param fields
+     * @param excludedMethods
+     *            methods not to be listed in the insertion point combo
+     * @throws JavaModelException
+     */
+    public FieldDialog(final Shell parentShell, final String dialogTitle,
+            final IType objectClass, final IField[] fields,
+            final Set excludedMethods) throws JavaModelException {
         super(parentShell);
         setShellStyle(SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL | SWT.RESIZE);
         this.title = dialogTitle;
@@ -88,7 +100,7 @@ public class FieldDialog extends Dialog {
         if (settings == null) {
             settings = dialogSettings.addNewSection(SETTINGS_SECTION);
         }
-        
+
         try {
             currentPositionIndex = settings.getInt(SETTINGS_INSERT_POSITION);
         } catch (NumberFormatException e) {
@@ -100,8 +112,12 @@ public class FieldDialog extends Dialog {
         insertPositions = new ArrayList();
         insertPositionLabels = new ArrayList();
 
-        IJavaElement[] members = objectClass.getChildren();
-        IMethod[] methods = objectClass.getMethods();
+        IJavaElement[] members = (IJavaElement[]) filterOutExcludedElements(
+                objectClass.getChildren(), excludedMethods).toArray(
+                new IJavaElement[0]);
+        IMethod[] methods = (IMethod[]) filterOutExcludedElements(
+                objectClass.getMethods(), excludedMethods).toArray(
+                new IMethod[0]);
 
         insertPositions.add(methods.length > 0 ? methods[0] : null); // first
         insertPositions.add(null); // last
@@ -116,6 +132,22 @@ public class FieldDialog extends Dialog {
             insertPositions.add(findSibling(curr, members));
         }
         insertPositions.add(null);
+    }
+
+    private Collection filterOutExcludedElements(IJavaElement[] src,
+            Set excludedElements) {
+
+        if (excludedElements == null || excludedElements.size() == 0)
+            return Arrays.asList(src);
+
+        Collection result = new ArrayList();
+        for (int i = 0, size = src.length; i < size; i++) {
+            if (!excludedElements.contains(src[i])) {
+                result.add(src[i]);
+            }
+        }
+
+        return result;
     }
 
     private IJavaElement findSibling(final IMethod curr,
@@ -138,7 +170,7 @@ public class FieldDialog extends Dialog {
     public boolean close() {
         List list = Arrays.asList(fieldViewer.getCheckedElements());
         checkedFields = (IField[]) list.toArray(new IField[list.size()]);
-        
+
         if (currentPositionIndex == 0 || currentPositionIndex == 1) {
             settings.put(SETTINGS_INSERT_POSITION, currentPositionIndex);
         }

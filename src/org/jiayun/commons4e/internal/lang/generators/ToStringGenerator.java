@@ -3,6 +3,9 @@
  */
 package org.jiayun.commons4e.internal.lang.generators;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IField;
@@ -70,12 +73,23 @@ public final class ToStringGenerator implements ILangGenerator {
      */
     public void generate(Shell parentShell, IType objectClass) {
 
+        IMethod existingMethod = objectClass.getMethod("toString",
+                new String[0]);
+        Set excludedMethods = new HashSet();
+        if (existingMethod.exists()) {
+            excludedMethods.add(existingMethod);
+        }
         try {
             ToStringDialog dialog = new ToStringDialog(parentShell,
                     "Generate ToString Method", objectClass, JavaUtils
-                            .getNonStaticFields(objectClass));
+                            .getNonStaticFields(objectClass), excludedMethods);
             int returnCode = dialog.open();
             if (returnCode == Window.OK) {
+
+                if (existingMethod.exists()) {
+                    existingMethod.delete(true, null);
+                }
+
                 IField[] checkedFields = dialog.getCheckedFields();
                 IJavaElement insertPosition = dialog.getElementPosition();
                 boolean appendSuper = dialog.getAppendSuper();
@@ -102,30 +116,7 @@ public final class ToStringGenerator implements ILangGenerator {
         ICompilationUnit cu = objectClass.getCompilationUnit();
         IEditorPart javaEditor = JavaUI.openInEditor(cu);
 
-        IMethod existingMethod = objectClass.getMethod("toString",
-                new String[0]);
-        if (existingMethod.exists()) {
-            existingMethod.delete(true, null);
-        }
-
-        String styleConstant = null;
-        if (!style.equals(DEFAULT_STYLE) && !style.equals("")) {
-
-            int lastDot = style.lastIndexOf('.');
-            if (lastDot != -1 && lastDot != (style.length() - 1)) {
-
-                String styleClass = style.substring(0, lastDot);
-                int lastDot2 = styleClass.lastIndexOf('.');
-
-                if (lastDot2 != -1 && lastDot2 != (styleClass.length() - 1)) {
-
-                    styleConstant = style
-                            .substring(lastDot2 + 1, style.length());
-                    objectClass.getCompilationUnit().createImport(styleClass,
-                            null, null);
-                }
-            }
-        }
+        String styleConstant = getStyleConstantAndAddImport(style, objectClass);
         String source = createMethod(objectClass, checkedFields, appendSuper,
                 generateComment, styleConstant);
 
@@ -155,6 +146,33 @@ public final class ToStringGenerator implements ILangGenerator {
                 insertPosition, true, null);
 
         JavaUI.revealInEditor(javaEditor, (IJavaElement) created);
+    }
+
+    private String getStyleConstantAndAddImport(final String style,
+            final IType objectClass) throws JavaModelException {
+
+        String styleConstant = null;
+        if (!style.equals(DEFAULT_STYLE) && !style.equals("")) {
+
+            int lastDot = style.lastIndexOf('.');
+            if (lastDot != -1 && lastDot != (style.length() - 1)) {
+
+                String styleClass = style.substring(0, lastDot);
+                if (styleClass.length() == 0) { return null; }
+
+                int lastDot2 = styleClass.lastIndexOf('.');
+                if (lastDot2 != (styleClass.length() - 1)) {
+
+                    styleConstant = style.substring(lastDot2 + 1, style
+                            .length());
+                    if (lastDot2 != -1) {
+                        objectClass.getCompilationUnit().createImport(
+                                styleClass, null, null);
+                    }
+                }
+            }
+        }
+        return styleConstant;
     }
 
     private String createMethod(final IType objectClass,
@@ -203,10 +221,13 @@ public final class ToStringGenerator implements ILangGenerator {
 
         private static final String SETTINGS_STYLE = "ToStringStyle";
 
-        public ToStringDialog(Shell parentShell, String dialogTitle,
-                IType objectClass, IField[] fields) throws JavaModelException {
+        public ToStringDialog(final Shell parentShell,
+                final String dialogTitle, final IType objectClass,
+                final IField[] fields, final Set excludedMethods)
+                throws JavaModelException {
 
-            super(parentShell, dialogTitle, objectClass, fields);
+            super(parentShell, dialogTitle, objectClass, fields,
+                    excludedMethods);
 
             IDialogSettings dialogSettings = Commons4ePlugin.getDefault()
                     .getDialogSettings();
