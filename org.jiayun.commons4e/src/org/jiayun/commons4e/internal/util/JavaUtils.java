@@ -1,6 +1,4 @@
-/*
- * Created on 2004/7/30
- */
+//$Id$
 package org.jiayun.commons4e.internal.util;
 
 import java.util.ArrayList;

@@ -1,3 +1,4 @@
+//$Id$
 package org.jiayun.commons4e;
 
 import java.util.MissingResourceException;

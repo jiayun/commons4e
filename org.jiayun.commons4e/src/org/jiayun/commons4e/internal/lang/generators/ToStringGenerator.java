@@ -1,6 +1,4 @@
-/*
- * Created on 2004/7/24
- */
+//$Id$
 package org.jiayun.commons4e.internal.lang.generators;
 
 import java.util.HashSet;

@@ -1,6 +1,4 @@
-/*
- * Created on 2004/7/23
- */
+//$Id$
 package org.jiayun.commons4e.internal.lang.actions;
 
 import org.eclipse.jdt.core.IType;

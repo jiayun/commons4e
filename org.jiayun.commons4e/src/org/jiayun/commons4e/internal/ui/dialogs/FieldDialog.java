@@ -1,6 +1,4 @@
-/*
- * Created on 2004/7/28
- */
+//$Id$
 package org.jiayun.commons4e.internal.ui.dialogs;
 
 import java.util.ArrayList;
