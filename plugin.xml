@@ -2,7 +2,7 @@
 <?eclipse version="3.0"?>
 <plugin
    id="org.jiayun.commons4e"
-   name="Commons4e Plug-in"
+   name="Commons4E"
    version="1.0.0"
    provider-name="JiaYun"
    class="org.jiayun.commons4e.Commons4ePlugin">
@@ -15,10 +15,10 @@
 
    <requires>
       <import plugin="org.eclipse.ui"/>
+      <import plugin="org.eclipse.core.resources"/>
       <import plugin="org.eclipse.core.runtime"/>
       <import plugin="org.eclipse.jdt.ui"/>
       <import plugin="org.eclipse.jdt.core"/>
-      <import plugin="org.eclipse.core.resources"/>
       <import plugin="org.eclipse.jface.text"/>
    </requires>
    <extension
