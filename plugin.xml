@@ -34,22 +34,22 @@
          </menu>
          <action
                label="Generate CompareTo Method..."
-               class="org.jiayun.commons4e.lang.actions.GenerateAction"
+               class="org.jiayun.commons4e.internal.lang.actions.GenerateAction"
                menubarPath="langMenu/langGroup"
                id="org.jiayun.commons4e.lang.actions.GenerateCompareToAction"/>
          <action
                label="Generate ToString Method..."
-               class="org.jiayun.commons4e.lang.actions.GenerateAction"
+               class="org.jiayun.commons4e.internal.lang.actions.GenerateAction"
                menubarPath="langMenu/langGroup"
                id="org.jiayun.commons4e.lang.actions.GenerateToStringAction"/>
          <action
                label="Generate HashCode Method..."
-               class="org.jiayun.commons4e.lang.actions.GenerateAction"
+               class="org.jiayun.commons4e.internal.lang.actions.GenerateAction"
                menubarPath="langMenu/langGroup"
                id="org.jiayun.commons4e.lang.actions.GenerateHashCodeAction"/>
          <action
                label="Generate Equals Method..."
-               class="org.jiayun.commons4e.lang.actions.GenerateAction"
+               class="org.jiayun.commons4e.internal.lang.actions.GenerateAction"
                menubarPath="langMenu/langGroup"
                id="org.jiayun.commons4e.lang.actions.GenerateEqualsAction"/>
       </objectContribution>
