@@ -17,11 +17,12 @@
       <import plugin="org.eclipse.ui"/>
       <import plugin="org.eclipse.core.runtime"/>
       <import plugin="org.eclipse.jdt.ui"/>
+      <import plugin="org.eclipse.jdt.core"/>
    </requires>
    <extension
          point="org.eclipse.ui.popupMenus">
-      <viewerContribution
-            targetID="#CompilationUnitEditorContext"
+      <objectContribution
+            objectClass="org.eclipse.jdt.core.IType"
             id="org.jiayun.commons4e.lang.LangActions">
          <menu
                label="Commons4e Lang"
@@ -31,25 +32,25 @@
          </menu>
          <action
                label="Generate CompareTo Method..."
-               class="org.jiayun.commons4e.lang.actions.GenerateCompareToAction"
+               class="org.jiayun.commons4e.lang.actions.GenerateAction"
                menubarPath="langMenu/langGroup"
                id="org.jiayun.commons4e.lang.actions.GenerateCompareToAction"/>
          <action
                label="Generate ToString Method..."
-               class="org.jiayun.commons4e.lang.actions.GenerateToStringAction"
+               class="org.jiayun.commons4e.lang.actions.GenerateAction"
                menubarPath="langMenu/langGroup"
                id="org.jiayun.commons4e.lang.actions.GenerateToStringAction"/>
          <action
                label="Generate HashCode Method..."
-               class="org.jiayun.commons4e.lang.actions.GenerateHashCodeAction"
+               class="org.jiayun.commons4e.lang.actions.GenerateAction"
                menubarPath="langMenu/langGroup"
                id="org.jiayun.commons4e.lang.actions.GenerateHashCodeAction"/>
          <action
                label="Generate Equals Method..."
-               class="org.jiayun.commons4e.lang.actions.GenerateEqualsAction"
+               class="org.jiayun.commons4e.lang.actions.GenerateAction"
                menubarPath="langMenu/langGroup"
                id="org.jiayun.commons4e.lang.actions.GenerateEqualsAction"/>
-      </viewerContribution>
+      </objectContribution>
    </extension>
 
 </plugin>
