@@ -2,7 +2,7 @@
 <feature
       id="org.jiayun.commons4e"
       label="Commons4E"
-      version="1.0.4"
+      version="1.0.5"
       provider-name="JiaYun"
       primary="true">
 
@@ -13,7 +13,7 @@
    </description>
 
    <copyright>
-      Copyright (C) 2004 JiaYun
+      Copyright (C) 2004-2005 JiaYun
    </copyright>
 
    <license url="http://www.eclipse.org/legal/epl-v10.html">
@@ -122,6 +122,6 @@ This Agreement is governed by the laws of the State of New York and the intellec
          id="org.jiayun.commons4e"
          download-size="0"
          install-size="0"
-         version="1.0.4"/>
+         version="1.0.5"/>
 
 </feature>
