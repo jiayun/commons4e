@@ -19,6 +19,7 @@ import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -44,11 +45,13 @@ import org.jiayun.commons4e.internal.util.JavaUtils;
  */
 public class FieldDialog extends Dialog {
 
+    protected CLabel messageLabel;
+
     private String title;
 
     private IType objectClass;
 
-    private CheckboxTableViewer fieldViewer;
+    protected CheckboxTableViewer fieldViewer;
 
     private IField[] fields;
 
@@ -136,7 +139,7 @@ public class FieldDialog extends Dialog {
             Set excludedElements) {
 
         if (excludedElements == null || excludedElements.size() == 0)
-            return Arrays.asList(src);
+                return Arrays.asList(src);
 
         Collection result = new ArrayList();
         for (int i = 0, size = src.length; i < size; i++) {
@@ -247,6 +250,12 @@ public class FieldDialog extends Dialog {
         data = new GridData(GridData.FILL_HORIZONTAL);
         data.horizontalSpan = 2;
         commentComposite.setLayoutData(data);
+
+        messageLabel = new CLabel(composite, SWT.NONE);
+        data = new GridData(GridData.FILL_HORIZONTAL);
+        data.horizontalSpan = 2;
+        messageLabel.setLayoutData(data);
+        messageLabel.setVisible(false);
 
         return composite;
     }

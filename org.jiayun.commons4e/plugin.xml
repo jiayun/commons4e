@@ -3,7 +3,7 @@
 <plugin
    id="org.jiayun.commons4e"
    name="Commons4E"
-   version="1.0.1"
+   version="1.0.2"
    provider-name="JiaYun"
    class="org.jiayun.commons4e.Commons4ePlugin">
 
