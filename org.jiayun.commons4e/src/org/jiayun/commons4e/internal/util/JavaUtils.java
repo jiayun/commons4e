@@ -58,10 +58,9 @@ public final class JavaUtils {
 
         if (objectClass.getSuperInterfaceNames().length == 0) {
 
-            int type;
             while (true) {
-                type = scanner.getNextToken();
-                if (type == ITerminalSymbols.TokenNameLBRACE) {
+                int token = scanner.getNextToken();
+                if (token == ITerminalSymbols.TokenNameLBRACE) {
 
                     buffer.replace(scanner.getCurrentTokenStartPosition(), 0,
                             "implements " + interfaceName + " ");
@@ -71,10 +70,9 @@ public final class JavaUtils {
 
         } else {
 
-            int type;
             while (true) {
-                type = scanner.getNextToken();
-                if (type == ITerminalSymbols.TokenNameimplements) {
+                int token = scanner.getNextToken();
+                if (token == ITerminalSymbols.TokenNameimplements) {
 
                     buffer.replace(scanner.getCurrentTokenEndPosition() + 1, 0,
                             " " + interfaceName + ",");
