@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin
+   id="org.jiayun.commons4e"
+   name="Commons4e Plug-in"
+   version="1.0.0"
+   provider-name="JiaYun"
+   class="org.jiayun.commons4e.Commons4ePlugin">
+
+   <runtime>
+      <library name="commons4e.jar">
+         <export name="*"/>
+      </library>
+   </runtime>
+
+   <requires>
+      <import plugin="org.eclipse.ui"/>
+      <import plugin="org.eclipse.core.runtime"/>
+      <import plugin="org.eclipse.jdt.ui"/>
+   </requires>
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            label="org.jiayun.commons4e.LangActionSet"
+            id="org.jiayun.commons4e.LangActionSet">
+         <menu
+               label="Commons4e Lang"
+               path="org.eclipse.jdt.ui.source.menu/generateGroup"
+               id="org.jiayun.commons4e.lang.menu">
+            <separator name="langGroup"/>
+         </menu>
+         <action
+               retarget="false"
+               label="Generate equals() Method"
+               menubarPath="org.eclipse.jdt.ui.source.menu/org.jiayun.commons4e.lang.menu/langGroup"
+               id="org.jiayun.commons4e.lang.actions.GenerateEqualsAction"/>
+      </actionSet>
+   </extension>
+   <extension
+         point="org.eclipse.ui.actionSetPartAssociations">
+      <actionSetPartAssociation targetID="org.jiayun.commons4e.LangActionSet">
+         <part id="org.eclipse.jdt.ui.CompilationUnitEditor"/>
+      </actionSetPartAssociation>
+   </extension>
+
+</plugin>
