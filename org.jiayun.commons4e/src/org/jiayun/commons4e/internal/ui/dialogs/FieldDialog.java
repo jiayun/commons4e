@@ -95,7 +95,8 @@ public class FieldDialog extends Dialog {
         this.objectClass = objectClass;
         this.fields = fields;
 
-        IDialogSettings dialogSettings = Commons4ePlugin.getDefault()
+        IDialogSettings dialogSettings = Commons4ePlugin
+                .getDefault()
                 .getDialogSettings();
         settings = dialogSettings.getSection(SETTINGS_SECTION);
         if (settings == null) {
@@ -139,7 +140,7 @@ public class FieldDialog extends Dialog {
             Set excludedElements) {
 
         if (excludedElements == null || excludedElements.size() == 0)
-                return Arrays.asList(src);
+            return Arrays.asList(src);
 
         Collection result = new ArrayList();
         for (int i = 0, size = src.length; i < size; i++) {
@@ -157,7 +158,9 @@ public class FieldDialog extends Dialog {
         int methodStart = curr.getSourceRange().getOffset();
         for (int i = members.length - 1; i >= 0; i--) {
             IMember member = (IMember) members[i];
-            if (methodStart >= member.getSourceRange().getOffset()) { return res; }
+            if (methodStart >= member.getSourceRange().getOffset()) {
+                return res;
+            }
             res = member;
         }
         return null;
@@ -212,33 +215,13 @@ public class FieldDialog extends Dialog {
         data = new GridData(GridData.FILL_BOTH);
         data.widthHint = 350;
         data.heightHint = 250;
-        data.verticalSpan = 2;
         fieldComposite.setLayoutData(data);
 
-        Button selectAllButton = new Button(composite, SWT.PUSH);
-        selectAllButton.setText("Select &All");
-        selectAllButton.addListener(SWT.Selection, new Listener() {
-
-            public void handleEvent(Event event) {
-                fieldViewer.setAllChecked(true);
-            }
-        });
+        Composite buttonComposite = createButtonComposite(composite);
         data = new GridData(GridData.HORIZONTAL_ALIGN_FILL
                 | GridData.VERTICAL_ALIGN_BEGINNING);
         data.widthHint = 150;
-        selectAllButton.setLayoutData(data);
-
-        Button deselectAllButton = new Button(composite, SWT.PUSH);
-        deselectAllButton.setText("&Deselect All");
-        deselectAllButton.addListener(SWT.Selection, new Listener() {
-
-            public void handleEvent(Event event) {
-                fieldViewer.setAllChecked(false);
-            }
-        });
-        data = new GridData(GridData.HORIZONTAL_ALIGN_FILL
-                | GridData.VERTICAL_ALIGN_BEGINNING);
-        deselectAllButton.setLayoutData(data);
+        buttonComposite.setLayoutData(data);
 
         Composite optionComposite = createOptionComposite(composite);
         data = new GridData(GridData.FILL_HORIZONTAL);
@@ -265,8 +248,8 @@ public class FieldDialog extends Dialog {
         GridLayout layout = new GridLayout();
         fieldComposite.setLayout(layout);
 
-        fieldViewer = CheckboxTableViewer.newCheckList(fieldComposite, SWT.TOP
-                | SWT.BORDER);
+        fieldViewer = CheckboxTableViewer.newCheckList(fieldComposite,
+                SWT.MULTI | SWT.TOP | SWT.BORDER);
         GridData data = new GridData(GridData.FILL_BOTH);
         data.grabExcessHorizontalSpace = true;
 
@@ -276,6 +259,43 @@ public class FieldDialog extends Dialog {
         fieldViewer.setContentProvider(new ArrayContentProvider());
         fieldViewer.setInput(fields);
         return fieldComposite;
+    }
+
+    private Composite createButtonComposite(final Composite composite) {
+        Composite buttonComposite = new Composite(composite, SWT.NONE);
+        GridLayout layout = new GridLayout();
+        layout.marginHeight = 0;
+        layout.marginWidth = 0;
+        buttonComposite.setLayout(layout);
+
+        addButtons(buttonComposite);
+
+        return buttonComposite;
+    }
+
+    protected void addButtons(final Composite buttonComposite) {
+        GridData data;
+        Button selectAllButton = new Button(buttonComposite, SWT.PUSH);
+        selectAllButton.setText("Select &All");
+        selectAllButton.addListener(SWT.Selection, new Listener() {
+
+            public void handleEvent(Event event) {
+                fieldViewer.setAllChecked(true);
+            }
+        });
+        data = new GridData(GridData.FILL_HORIZONTAL);
+        selectAllButton.setLayoutData(data);
+
+        Button deselectAllButton = new Button(buttonComposite, SWT.PUSH);
+        deselectAllButton.setText("&Deselect All");
+        deselectAllButton.addListener(SWT.Selection, new Listener() {
+
+            public void handleEvent(Event event) {
+                fieldViewer.setAllChecked(false);
+            }
+        });
+        data = new GridData(GridData.FILL_HORIZONTAL);
+        deselectAllButton.setLayoutData(data);
     }
 
     protected Composite createOptionComposite(final Composite composite) {
