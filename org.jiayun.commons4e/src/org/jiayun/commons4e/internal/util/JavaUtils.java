@@ -2,7 +2,9 @@
 package org.jiayun.commons4e.internal.util;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.core.runtime.Preferences;
 import org.eclipse.jdt.core.Flags;
@@ -21,8 +23,16 @@ import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.compiler.IScanner;
 import org.eclipse.jdt.core.compiler.ITerminalSymbols;
 import org.eclipse.jdt.core.compiler.InvalidInputException;
+import org.eclipse.jdt.core.formatter.CodeFormatter;
 import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.text.BadLocationException;
+import org.eclipse.jface.text.Document;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.text.edits.TextEdit;
+import org.jiayun.commons4e.Commons4ePlugin;
+import org.jiayun.commons4e.internal.ui.preferences.PreferenceConstants;
 
 /*
  * This class contains some code from
@@ -44,7 +54,9 @@ public final class JavaUtils {
         ITypeHierarchy typeHierarchy = objectClass.newSupertypeHierarchy(null);
         IType[] interfaces = typeHierarchy.getAllInterfaces();
         for (int i = 0, size = interfaces.length; i < size; i++) {
-            if (interfaces[i].getElementName().equals(interfaceName)) { return; }
+            if (interfaces[i].getElementName().equals(interfaceName)) {
+                return;
+            }
         }
 
         ICompilationUnit cu = objectClass.getCompilationUnit();
@@ -84,8 +96,29 @@ public final class JavaUtils {
 
     }
 
-    public static IField[] getNonStaticFields(final IType objectClass)
+    public static boolean areAllFinalFields(final IField[] fields)
             throws JavaModelException {
+        for (int i = 0; i < fields.length; i++) {
+            if (!Flags.isFinal(fields[i].getFlags())) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public static IField[] getNonStaticNonCacheFields(final IType objectClass)
+            throws JavaModelException {
+
+        Set cacheFields = new HashSet();
+        cacheFields.add(Commons4ePlugin
+                .getDefault()
+                .getPreferenceStore()
+                .getString(PreferenceConstants.HASHCODE_CACHING_FIELD));
+        cacheFields.add(Commons4ePlugin
+                .getDefault()
+                .getPreferenceStore()
+                .getString(PreferenceConstants.TOSTRING_CACHING_FIELD));
 
         IField[] fields;
         fields = objectClass.getFields();
@@ -93,7 +126,8 @@ public final class JavaUtils {
         List result = new ArrayList();
 
         for (int i = 0, size = fields.length; i < size; i++) {
-            if (!Flags.isStatic(fields[i].getFlags())) {
+            if (!Flags.isStatic(fields[i].getFlags())
+                    && !cacheFields.contains(fields[i].getElementName())) {
                 result.add(fields[i]);
             }
         }
@@ -133,11 +167,13 @@ public final class JavaUtils {
                 char ch = buf.getChar(i);
                 if (ch == SWT.CR) {
                     if (i + 1 < length) {
-                        if (buf.getChar(i + 1) == SWT.LF) { return "\r\n"; //$NON-NLS-1$
+                        if (buf.getChar(i + 1) == SWT.LF) {
+                            return "\r\n"; //$NON-NLS-1$
                         }
                     }
                     return "\r"; //$NON-NLS-1$
-                } else if (ch == SWT.LF) { return "\n"; //$NON-NLS-1$
+                } else if (ch == SWT.LF) {
+                    return "\n"; //$NON-NLS-1$
                 }
             }
         }
@@ -154,7 +190,8 @@ public final class JavaUtils {
                     .getAncestor(IJavaElement.COMPILATION_UNIT);
             if (cu != null) {
                 IBuffer buf = cu.getBuffer();
-                int offset = ((ISourceReference) elem).getSourceRange()
+                int offset = ((ISourceReference) elem)
+                        .getSourceRange()
                         .getOffset();
                 int i = offset;
                 // find beginning of line
@@ -216,5 +253,29 @@ public final class JavaUtils {
             }
         }
         return result;
+    }
+
+    public static String formatCode(final Shell parentShell,
+            final IType objectClass, String source) throws JavaModelException {
+        String lineDelim = getLineDelimiterUsed(objectClass);
+        int indent = getIndentUsed(objectClass) + 1;
+
+        TextEdit textEdit = ToolFactory.createCodeFormatter(null).format(
+                CodeFormatter.K_CLASS_BODY_DECLARATIONS, source, 0,
+                source.length(), indent, lineDelim);
+
+        String formattedContent;
+        if (textEdit != null) {
+            Document document = new Document(source);
+            try {
+                textEdit.apply(document);
+            } catch (BadLocationException e) {
+                MessageDialog.openError(parentShell, "Error", e.getMessage());
+            }
+            formattedContent = document.get();
+        } else {
+            formattedContent = source;
+        }
+        return formattedContent;
     }
 }

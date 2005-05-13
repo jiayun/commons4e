@@ -1,6 +1,8 @@
 //$Id$
 package org.jiayun.commons4e.internal.ui.preferences;
 
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.jdt.core.JavaConventions;
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
@@ -44,7 +46,7 @@ public class Commons4eBasePreferencePage extends FieldEditorPreferencePage
         hashCodeField = new StringFieldEditor(
                 PreferenceConstants.HASHCODE_CACHING_FIELD,
                 "Hash&Code caching field", getFieldEditorParent());
-        hashCodeField.setEmptyStringAllowed(false);
+        //hashCodeField.setEmptyStringAllowed(false);
         addField(hashCodeField);
 
         cacheToString = new BooleanFieldEditor(
@@ -56,29 +58,49 @@ public class Commons4eBasePreferencePage extends FieldEditorPreferencePage
         toStringField = new StringFieldEditor(
                 PreferenceConstants.TOSTRING_CACHING_FIELD,
                 "To&String caching field", getFieldEditorParent());
-        toStringField.setEmptyStringAllowed(false);
+        //toStringField.setEmptyStringAllowed(false);
         addField(toStringField);
+    }
+
+    protected void checkState() {
+        super.checkState();
+
+        if (!isValid())
+            return;
+
+        IStatus status = JavaConventions.validateIdentifier(hashCodeField
+                .getStringValue());
+        if (!status.isOK()) {
+            setErrorMessage(status.getMessage());
+            setValid(false);
+            return;
+        }
+
+        status = JavaConventions.validateIdentifier(toStringField
+                .getStringValue());
+        if (!status.isOK()) {
+            setErrorMessage(status.getMessage());
+            setValid(false);
+            return;
+        }
     }
 
     public void propertyChange(PropertyChangeEvent event) {
         super.propertyChange(event);
+
         if (event.getProperty().equals(FieldEditor.VALUE)) {
+
             if (event.getSource() == cacheHashCode) {
                 hashCodeField.setEnabled(cacheHashCode.getBooleanValue(),
                         getFieldEditorParent());
-                if (!cacheHashCode.getBooleanValue()
-                        && !hashCodeField.isValid()) {
-                    hashCodeField.loadDefault();
-                }
-            }
 
-            if (event.getSource() == cacheToString) {
+            } else if (event.getSource() == cacheToString) {
                 toStringField.setEnabled(cacheToString.getBooleanValue(),
                         getFieldEditorParent());
-                if (!cacheToString.getBooleanValue()
-                        && !toStringField.isValid()) {
-                    toStringField.loadDefault();
-                }
+
+            } else if (event.getSource() == hashCodeField
+                    || event.getSource() == toStringField) {
+                checkState();
             }
         }
     }

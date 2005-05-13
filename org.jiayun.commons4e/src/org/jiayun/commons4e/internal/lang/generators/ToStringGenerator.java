@@ -11,13 +11,9 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.ToolFactory;
-import org.eclipse.jdt.core.formatter.CodeFormatter;
 import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.text.BadLocationException;
-import org.eclipse.jface.text.Document;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -25,11 +21,11 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.text.edits.TextEdit;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.PartInitException;
 import org.jiayun.commons4e.Commons4ePlugin;
 import org.jiayun.commons4e.internal.ui.dialogs.FieldDialog;
+import org.jiayun.commons4e.internal.ui.preferences.PreferenceConstants;
 import org.jiayun.commons4e.internal.util.JavaUtils;
 
 /**
@@ -52,7 +48,7 @@ public final class ToStringGenerator implements ILangGenerator {
             + "SIMPLE_STYLE";
 
     private static final String[] STYLES = new String[] { DEFAULT_STYLE,
-            MULTI_LINE_STYLE, NO_FIELD_NAMES_STYLE, SIMPLE_STYLE };
+            MULTI_LINE_STYLE, NO_FIELD_NAMES_STYLE, SIMPLE_STYLE};
 
     private static final ILangGenerator instance = new ToStringGenerator();
 
@@ -80,7 +76,8 @@ public final class ToStringGenerator implements ILangGenerator {
         try {
             ToStringDialog dialog = new ToStringDialog(parentShell,
                     "Generate ToString Method", objectClass, JavaUtils
-                            .getNonStaticFields(objectClass), excludedMethods);
+                            .getNonStaticNonCacheFields(objectClass),
+                    excludedMethods);
             int returnCode = dialog.open();
             if (returnCode == Window.OK) {
 
@@ -114,34 +111,39 @@ public final class ToStringGenerator implements ILangGenerator {
         ICompilationUnit cu = objectClass.getCompilationUnit();
         IEditorPart javaEditor = JavaUI.openInEditor(cu);
 
+        boolean isCacheable = Commons4ePlugin
+                .getDefault()
+                .getPluginPreferences()
+                .getBoolean(PreferenceConstants.CACHE_TOSTRING)
+                && JavaUtils.areAllFinalFields(checkedFields);
+
         String styleConstant = getStyleConstantAndAddImport(style, objectClass);
         String source = createMethod(objectClass, checkedFields, appendSuper,
-                generateComment, styleConstant);
+                generateComment, styleConstant, isCacheable);
 
-        String lineDelim = JavaUtils.getLineDelimiterUsed(objectClass);
-        int indent = JavaUtils.getIndentUsed(objectClass) + 1;
-
-        TextEdit textEdit = ToolFactory.createCodeFormatter(null).format(
-                CodeFormatter.K_CLASS_BODY_DECLARATIONS, source, 0,
-                source.length(), indent, lineDelim);
-
-        String formattedContent;
-        if (textEdit != null) {
-            Document document = new Document(source);
-            try {
-                textEdit.apply(document);
-            } catch (BadLocationException e) {
-                MessageDialog.openError(parentShell, "Error", e.getMessage());
-            }
-            formattedContent = document.get();
-        } else {
-            formattedContent = source;
-        }
+        String formattedContent = JavaUtils.formatCode(parentShell,
+                objectClass, source);
 
         objectClass.getCompilationUnit().createImport(
                 "org.apache.commons.lang.builder.ToStringBuilder", null, null);
         IMethod created = objectClass.createMethod(formattedContent,
                 insertPosition, true, null);
+
+        String cachingField = Commons4ePlugin
+                .getDefault()
+                .getPluginPreferences()
+                .getString(PreferenceConstants.TOSTRING_CACHING_FIELD);
+        IField field = objectClass.getField(cachingField);
+        if (field.exists()) {
+            field.delete(true, null);
+        }
+        if (isCacheable) {
+            String fieldSrc = "private transient String " + cachingField
+                    + ";\n\n";
+            String formattedFieldSrc = JavaUtils.formatCode(parentShell,
+                    objectClass, fieldSrc);
+            objectClass.createField(formattedFieldSrc, created, true, null);
+        }
 
         JavaUI.revealInEditor(javaEditor, (IJavaElement) created);
     }
@@ -156,7 +158,9 @@ public final class ToStringGenerator implements ILangGenerator {
             if (lastDot != -1 && lastDot != (style.length() - 1)) {
 
                 String styleClass = style.substring(0, lastDot);
-                if (styleClass.length() == 0) { return null; }
+                if (styleClass.length() == 0) {
+                    return null;
+                }
 
                 int lastDot2 = styleClass.lastIndexOf('.');
                 if (lastDot2 != (styleClass.length() - 1)) {
@@ -175,7 +179,8 @@ public final class ToStringGenerator implements ILangGenerator {
 
     private String createMethod(final IType objectClass,
             final IField[] checkedFields, final boolean appendSuper,
-            final boolean generateComment, final String styleConstant) {
+            final boolean generateComment, final String styleConstant,
+            boolean isCacheable) {
 
         StringBuffer content = new StringBuffer();
         if (generateComment) {
@@ -184,10 +189,35 @@ public final class ToStringGenerator implements ILangGenerator {
             content.append(" */\n");
         }
         content.append("public String toString() {\n");
-        if (styleConstant == null) {
-            content.append("return new ToStringBuilder(this)");
+        if (isCacheable) {
+            String cachingField = Commons4ePlugin
+                    .getDefault()
+                    .getPluginPreferences()
+                    .getString(PreferenceConstants.TOSTRING_CACHING_FIELD);
+            content.append("if (" + cachingField + "== null) {\n");
+            content.append(cachingField + " = ");
+            content.append(createBuilderString(checkedFields, appendSuper,
+                    styleConstant));
+            content.append("}\n");
+            content.append("return " + cachingField + ";\n");
+
         } else {
-            content.append("return new ToStringBuilder(this, ");
+            content.append("return ");
+            content.append(createBuilderString(checkedFields, appendSuper,
+                    styleConstant));
+        }
+        content.append("}\n\n");
+
+        return content.toString();
+    }
+
+    private String createBuilderString(final IField[] checkedFields,
+            final boolean appendSuper, final String styleConstant) {
+        StringBuffer content = new StringBuffer();
+        if (styleConstant == null) {
+            content.append("new ToStringBuilder(this)");
+        } else {
+            content.append("new ToStringBuilder(this, ");
             content.append(styleConstant);
             content.append(")");
         }
@@ -202,7 +232,6 @@ public final class ToStringGenerator implements ILangGenerator {
             content.append(")");
         }
         content.append(".toString();\n");
-        content.append("}\n\n");
 
         return content.toString();
     }
@@ -227,7 +256,8 @@ public final class ToStringGenerator implements ILangGenerator {
             super(parentShell, dialogTitle, objectClass, fields,
                     excludedMethods);
 
-            IDialogSettings dialogSettings = Commons4ePlugin.getDefault()
+            IDialogSettings dialogSettings = Commons4ePlugin
+                    .getDefault()
                     .getDialogSettings();
             settings = dialogSettings.getSection(SETTINGS_SECTION);
             if (settings == null) {

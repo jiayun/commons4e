@@ -12,16 +12,12 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.ToolFactory;
-import org.eclipse.jdt.core.formatter.CodeFormatter;
 import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.resource.JFaceResources;
-import org.eclipse.jface.text.BadLocationException;
-import org.eclipse.jface.text.Document;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -38,11 +34,11 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.text.edits.TextEdit;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.PartInitException;
 import org.jiayun.commons4e.Commons4ePlugin;
 import org.jiayun.commons4e.internal.ui.dialogs.FieldDialog;
+import org.jiayun.commons4e.internal.ui.preferences.PreferenceConstants;
 import org.jiayun.commons4e.internal.util.JavaUtils;
 
 /**
@@ -76,7 +72,8 @@ public final class HashCodeGenerator implements ILangGenerator {
         try {
             HashCodeDialog dialog = new HashCodeDialog(parentShell,
                     "Generate HashCode Method", objectClass, JavaUtils
-                            .getNonStaticFields(objectClass), excludedMethods);
+                            .getNonStaticNonCacheFields(objectClass),
+                    excludedMethods);
             int returnCode = dialog.open();
             if (returnCode == Window.OK) {
 
@@ -110,40 +107,45 @@ public final class HashCodeGenerator implements ILangGenerator {
         ICompilationUnit cu = objectClass.getCompilationUnit();
         IEditorPart javaEditor = JavaUI.openInEditor(cu);
 
+        boolean isCacheable = Commons4ePlugin
+                .getDefault()
+                .getPluginPreferences()
+                .getBoolean(PreferenceConstants.CACHE_HASHCODE)
+                && JavaUtils.areAllFinalFields(checkedFields);
+
         String source = createMethod(objectClass, checkedFields, appendSuper,
-                generateComment, imNumbers);
+                generateComment, imNumbers, isCacheable);
 
-        String lineDelim = JavaUtils.getLineDelimiterUsed(objectClass);
-        int indent = JavaUtils.getIndentUsed(objectClass) + 1;
-
-        TextEdit textEdit = ToolFactory.createCodeFormatter(null).format(
-                CodeFormatter.K_CLASS_BODY_DECLARATIONS, source, 0,
-                source.length(), indent, lineDelim);
-
-        String formattedContent;
-        if (textEdit != null) {
-            Document document = new Document(source);
-            try {
-                textEdit.apply(document);
-            } catch (BadLocationException e) {
-                MessageDialog.openError(parentShell, "Error", e.getMessage());
-            }
-            formattedContent = document.get();
-        } else {
-            formattedContent = source;
-        }
+        String formattedContent = JavaUtils.formatCode(parentShell,
+                objectClass, source);
 
         objectClass.getCompilationUnit().createImport(
                 "org.apache.commons.lang.builder.HashCodeBuilder", null, null);
         IMethod created = objectClass.createMethod(formattedContent,
                 insertPosition, true, null);
 
+        String cachingField = Commons4ePlugin
+                .getDefault()
+                .getPluginPreferences()
+                .getString(PreferenceConstants.HASHCODE_CACHING_FIELD);
+        IField field = objectClass.getField(cachingField);
+        if (field.exists()) {
+            field.delete(true, null);
+        }
+        if (isCacheable) {
+            String fieldSrc = "private transient int " + cachingField + ";\n\n";
+            String formattedFieldSrc = JavaUtils.formatCode(parentShell,
+                    objectClass, fieldSrc);
+            objectClass.createField(formattedFieldSrc, created, true, null);
+        }
+
         JavaUI.revealInEditor(javaEditor, (IJavaElement) created);
     }
 
     private String createMethod(final IType objectClass,
             final IField[] checkedFields, final boolean appendSuper,
-            final boolean generateComment, final IInitMultNumbers imNumbers) {
+            final boolean generateComment, final IInitMultNumbers imNumbers,
+            boolean isCacheable) {
 
         StringBuffer content = new StringBuffer();
         if (generateComment) {
@@ -152,7 +154,32 @@ public final class HashCodeGenerator implements ILangGenerator {
             content.append(" */\n");
         }
         content.append("public int hashCode() {\n");
-        content.append("return new HashCodeBuilder(");
+        if (isCacheable) {
+            String cachingField = Commons4ePlugin
+                    .getDefault()
+                    .getPluginPreferences()
+                    .getString(PreferenceConstants.HASHCODE_CACHING_FIELD);
+            content.append("if (" + cachingField + "== 0) {\n");
+            content.append(cachingField + " = ");
+            content.append(createBuilderString(checkedFields, appendSuper,
+                    imNumbers));
+            content.append("}\n");
+            content.append("return " + cachingField + ";\n");
+
+        } else {
+            content.append("return ");
+            content.append(createBuilderString(checkedFields, appendSuper,
+                    imNumbers));
+        }
+        content.append("}\n\n");
+
+        return content.toString();
+    }
+
+    private String createBuilderString(final IField[] checkedFields,
+            final boolean appendSuper, final IInitMultNumbers imNumbers) {
+        StringBuffer content = new StringBuffer();
+        content.append("new HashCodeBuilder(");
         content.append(imNumbers.getValue());
         content.append(")");
         if (appendSuper) {
@@ -164,7 +191,6 @@ public final class HashCodeGenerator implements ILangGenerator {
             content.append(")");
         }
         content.append(".toHashCode();\n");
-        content.append("}\n\n");
 
         return content.toString();
     }
@@ -179,7 +205,7 @@ public final class HashCodeGenerator implements ILangGenerator {
 
         private IInitMultNumbers imNumbers[] = new IInitMultNumbers[] {
                 new DefaultInitMultNumbers(), new RandomInitMultNumbers(),
-                new CustomInitMultNumbers() };
+                new CustomInitMultNumbers()};
 
         private int initMultType;
 
@@ -205,7 +231,8 @@ public final class HashCodeGenerator implements ILangGenerator {
             super(parentShell, dialogTitle, objectClass, fields,
                     excludedMethods);
 
-            IDialogSettings dialogSettings = Commons4ePlugin.getDefault()
+            IDialogSettings dialogSettings = Commons4ePlugin
+                    .getDefault()
                     .getDialogSettings();
             settings = dialogSettings.getSection(SETTINGS_SECTION);
             if (settings == null) {

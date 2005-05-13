@@ -11,13 +11,9 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.ToolFactory;
-import org.eclipse.jdt.core.formatter.CodeFormatter;
 import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.text.BadLocationException;
-import org.eclipse.jface.text.Document;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -26,7 +22,6 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.text.edits.TextEdit;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.PartInitException;
 import org.jiayun.commons4e.Commons4ePlugin;
@@ -64,7 +59,7 @@ public final class EqualsGenerator implements ILangGenerator {
         try {
             EqualsDialog dialog = new EqualsDialog(parentShell,
                     "Generate Equals Method", objectClass, JavaUtils
-                            .getNonStaticFields(objectClass), excludedMethods);
+                            .getNonStaticNonCacheFields(objectClass), excludedMethods);
             int returnCode = dialog.open();
             if (returnCode == Window.OK) {
 
@@ -102,25 +97,8 @@ public final class EqualsGenerator implements ILangGenerator {
         String source = createMethod(objectClass, checkedFields, appendSuper,
                 generateComment, compareReferences);
 
-        String lineDelim = JavaUtils.getLineDelimiterUsed(objectClass);
-        int indent = JavaUtils.getIndentUsed(objectClass) + 1;
-
-        TextEdit textEdit = ToolFactory.createCodeFormatter(null).format(
-                CodeFormatter.K_CLASS_BODY_DECLARATIONS, source, 0,
-                source.length(), indent, lineDelim);
-
-        String formattedContent;
-        if (textEdit != null) {
-            Document document = new Document(source);
-            try {
-                textEdit.apply(document);
-            } catch (BadLocationException e) {
-                MessageDialog.openError(parentShell, "Error", e.getMessage());
-            }
-            formattedContent = document.get();
-        } else {
-            formattedContent = source;
-        }
+        String formattedContent = JavaUtils.formatCode(parentShell,
+                objectClass, source);
 
         objectClass.getCompilationUnit().createImport(
                 "org.apache.commons.lang.builder.EqualsBuilder", null, null);
