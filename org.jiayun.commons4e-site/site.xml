@@ -4,7 +4,7 @@
    <description url="http://commons4e.berlios.de/updatesite">
       Commons4E Update Site
    </description>
-   <feature url="features/org.jiayun.commons4e_1.0.5.jar" id="org.jiayun.commons4e" version="1.0.5">
+   <feature url="features/org.jiayun.commons4e_1.0.6.jar" id="org.jiayun.commons4e" version="1.0.6">
       <category name="Commons4E"/>
    </feature>
    <category-def name="Commons4E" label="Commons4E"/>
