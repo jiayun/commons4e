@@ -85,5 +85,17 @@
                id="org.jiayun.commons4e.lang.actions.GenerateEqualsAction"/>
       </viewerContribution>
    </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            class="org.jiayun.commons4e.internal.ui.preferences.Commons4eBasePreferencePage"
+            category="org.eclipse.jdt.ui.preferences.JavaBasePreferencePage"
+            name="Commons4E"
+            id="org.jiayun.commons4e.ui.preferences.Commons4eBasePreferencePage"/>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer class="org.jiayun.commons4e.Commons4ePreferenceInitializer"/>
+   </extension>
 
 </plugin>
