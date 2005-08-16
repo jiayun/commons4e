@@ -2,7 +2,7 @@
 <feature
       id="org.jiayun.commons4e"
       label="Commons4E"
-      version="1.0.6"
+      version="1.0.7"
       provider-name="JiaYun"
       primary="true">
 
@@ -122,6 +122,6 @@ This Agreement is governed by the laws of the State of New York and the intellec
          id="org.jiayun.commons4e"
          download-size="0"
          install-size="0"
-         version="1.0.6"/>
+         version="1.0.7"/>
 
 </feature>
