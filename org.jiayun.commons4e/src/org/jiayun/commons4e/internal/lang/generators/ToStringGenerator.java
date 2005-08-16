@@ -24,7 +24,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.PartInitException;
 import org.jiayun.commons4e.Commons4ePlugin;
-import org.jiayun.commons4e.internal.ui.dialogs.FieldDialog;
+import org.jiayun.commons4e.internal.ui.dialogs.OrderableFieldDialog;
 import org.jiayun.commons4e.internal.ui.preferences.PreferenceConstants;
 import org.jiayun.commons4e.internal.util.JavaUtils;
 
@@ -236,7 +236,7 @@ public final class ToStringGenerator implements ILangGenerator {
         return content.toString();
     }
 
-    private static class ToStringDialog extends FieldDialog {
+    private static class ToStringDialog extends OrderableFieldDialog {
 
         private Combo styleCombo;
 
