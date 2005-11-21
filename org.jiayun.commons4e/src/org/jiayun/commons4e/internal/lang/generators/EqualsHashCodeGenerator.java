@@ -24,6 +24,7 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.layout.GridData;
@@ -44,11 +45,11 @@ import org.jiayun.commons4e.internal.util.JavaUtils;
 /**
  * @author jiayun
  */
-public final class HashCodeGenerator implements ILangGenerator {
+public final class EqualsHashCodeGenerator implements ILangGenerator {
 
-    private static final ILangGenerator instance = new HashCodeGenerator();
+    private static final ILangGenerator instance = new EqualsHashCodeGenerator();
 
-    private HashCodeGenerator() {
+    private EqualsHashCodeGenerator() {
     }
 
     public static ILangGenerator getInstance() {
@@ -63,32 +64,50 @@ public final class HashCodeGenerator implements ILangGenerator {
      */
     public void generate(Shell parentShell, IType objectClass) {
 
-        IMethod existingMethod = objectClass.getMethod("hashCode",
+        IMethod existingEquals = objectClass.getMethod("equals",
+                new String[] { "QObject;"});
+        IMethod existingHashCode = objectClass.getMethod("hashCode",
                 new String[0]);
         Set excludedMethods = new HashSet();
-        if (existingMethod.exists()) {
-            excludedMethods.add(existingMethod);
+        if (existingEquals.exists()) {
+            excludedMethods.add(existingEquals);
+        }
+        if (existingHashCode.exists()) {
+            excludedMethods.add(existingHashCode);
         }
         try {
-            HashCodeDialog dialog = new HashCodeDialog(parentShell,
-                    "Generate HashCode Method", objectClass, JavaUtils
-                            .getNonStaticNonCacheFields(objectClass),
+            EqualsHashCodeDialog dialog = new EqualsHashCodeDialog(parentShell,
+                    "Generate Equals and HashCode", objectClass,
+                    JavaUtils.getNonStaticNonCacheFields(objectClass),
                     excludedMethods);
             int returnCode = dialog.open();
             if (returnCode == Window.OK) {
 
-                if (existingMethod.exists()) {
-                    existingMethod.delete(true, null);
+                if (existingEquals.exists()) {
+                    existingEquals.delete(true, null);
+                }
+                if (existingHashCode.exists()) {
+                    existingHashCode.delete(true, null);
                 }
 
                 IField[] checkedFields = dialog.getCheckedFields();
                 IJavaElement insertPosition = dialog.getElementPosition();
                 boolean appendSuper = dialog.getAppendSuper();
                 boolean generateComment = dialog.getGenerateComment();
+                boolean compareReferences = dialog.getCompareReferences();
                 IInitMultNumbers imNumbers = dialog.getInitMultNumbers();
 
-                generateHashCode(parentShell, objectClass, checkedFields,
-                        insertPosition, appendSuper, generateComment, imNumbers);
+                IJavaElement created = generateHashCode(parentShell, objectClass,
+                        checkedFields, insertPosition, appendSuper,
+                        generateComment, imNumbers);
+
+                created = generateEquals(parentShell, objectClass,
+                        checkedFields, created, appendSuper, generateComment,
+                        compareReferences);
+
+                ICompilationUnit cu = objectClass.getCompilationUnit();
+                IEditorPart javaEditor = JavaUI.openInEditor(cu);
+                JavaUI.revealInEditor(javaEditor, (IJavaElement) created);
             }
 
         } catch (CoreException e) {
@@ -98,14 +117,70 @@ public final class HashCodeGenerator implements ILangGenerator {
 
     }
 
-    private void generateHashCode(final Shell parentShell,
+    private IJavaElement generateEquals(final Shell parentShell,
+            final IType objectClass, final IField[] checkedFields,
+            final IJavaElement insertPosition, final boolean appendSuper,
+            final boolean generateComment, final boolean compareReferences)
+            throws PartInitException, JavaModelException {
+
+        String source = createEqualsMethod(objectClass, checkedFields,
+                appendSuper, generateComment, compareReferences);
+
+        String formattedContent = JavaUtils.formatCode(parentShell,
+                objectClass, source);
+
+        objectClass.getCompilationUnit().createImport(
+                "org.apache.commons.lang.builder.EqualsBuilder", null, null);
+        IJavaElement created = objectClass.createMethod(formattedContent,
+                insertPosition, true, null);
+
+        return created;
+    }
+
+    private String createEqualsMethod(final IType objectClass,
+            final IField[] checkedFields, final boolean appendSuper,
+            final boolean generateComment, final boolean compareReferences) {
+
+        StringBuffer content = new StringBuffer();
+        if (generateComment) {
+            content.append("/* (non-Javadoc)\n");
+            content
+                    .append(" * @see java.lang.Object#equals(java.lang.Object)\n");
+            content.append(" */\n");
+        }
+        content.append("public boolean equals(final Object other) {\n");
+        if (compareReferences) {
+            content.append("if (this == other) return true;");
+        }
+        content.append("if ( !(other instanceof ");
+        content.append(objectClass.getElementName());
+        content.append(") ) return false;\n");
+        content.append(objectClass.getElementName());
+        content.append(" castOther = (");
+        content.append(objectClass.getElementName());
+        content.append(") other;\n");
+        content.append("return new EqualsBuilder()");
+        if (appendSuper) {
+            content.append(".appendSuper(super.equals(other))");
+        }
+        for (int i = 0; i < checkedFields.length; i++) {
+            content.append(".append(");
+            content.append(checkedFields[i].getElementName());
+            content.append(", castOther.");
+            content.append(checkedFields[i].getElementName());
+            content.append(")");
+        }
+        content.append(".isEquals();\n");
+        content.append("}\n\n");
+
+        return content.toString();
+    }
+
+    private IJavaElement generateHashCode(final Shell parentShell,
             final IType objectClass, final IField[] checkedFields,
             final IJavaElement insertPosition, final boolean appendSuper,
             final boolean generateComment, final IInitMultNumbers imNumbers)
             throws PartInitException, JavaModelException {
-
-        ICompilationUnit cu = objectClass.getCompilationUnit();
-        IEditorPart javaEditor = JavaUI.openInEditor(cu);
 
         boolean isCacheable = Commons4ePlugin
                 .getDefault()
@@ -113,15 +188,15 @@ public final class HashCodeGenerator implements ILangGenerator {
                 .getBoolean(PreferenceConstants.CACHE_HASHCODE)
                 && JavaUtils.areAllFinalFields(checkedFields);
 
-        String source = createMethod(objectClass, checkedFields, appendSuper,
-                generateComment, imNumbers, isCacheable);
+        String source = createHashCodeMethod(objectClass, checkedFields,
+                appendSuper, generateComment, imNumbers, isCacheable);
 
         String formattedContent = JavaUtils.formatCode(parentShell,
                 objectClass, source);
 
         objectClass.getCompilationUnit().createImport(
                 "org.apache.commons.lang.builder.HashCodeBuilder", null, null);
-        IMethod created = objectClass.createMethod(formattedContent,
+        IJavaElement created = objectClass.createMethod(formattedContent,
                 insertPosition, true, null);
 
         String cachingField = Commons4ePlugin
@@ -136,13 +211,13 @@ public final class HashCodeGenerator implements ILangGenerator {
             String fieldSrc = "private transient int " + cachingField + ";\n\n";
             String formattedFieldSrc = JavaUtils.formatCode(parentShell,
                     objectClass, fieldSrc);
-            objectClass.createField(formattedFieldSrc, created, true, null);
+            created = objectClass.createField(formattedFieldSrc, created, true, null);
         }
 
-        JavaUI.revealInEditor(javaEditor, (IJavaElement) created);
+        return created;
     }
 
-    private String createMethod(final IType objectClass,
+    private String createHashCodeMethod(final IType objectClass,
             final IField[] checkedFields, final boolean appendSuper,
             final boolean generateComment, final IInitMultNumbers imNumbers,
             boolean isCacheable) {
@@ -161,22 +236,22 @@ public final class HashCodeGenerator implements ILangGenerator {
                     .getString(PreferenceConstants.HASHCODE_CACHING_FIELD);
             content.append("if (" + cachingField + "== 0) {\n");
             content.append(cachingField + " = ");
-            content.append(createBuilderString(checkedFields, appendSuper,
-                    imNumbers));
+            content.append(createHashCodeBuilderString(checkedFields,
+                    appendSuper, imNumbers));
             content.append("}\n");
             content.append("return " + cachingField + ";\n");
 
         } else {
             content.append("return ");
-            content.append(createBuilderString(checkedFields, appendSuper,
-                    imNumbers));
+            content.append(createHashCodeBuilderString(checkedFields,
+                    appendSuper, imNumbers));
         }
         content.append("}\n\n");
 
         return content.toString();
     }
 
-    private String createBuilderString(final IField[] checkedFields,
+    private String createHashCodeBuilderString(final IField[] checkedFields,
             final boolean appendSuper, final IInitMultNumbers imNumbers) {
         StringBuffer content = new StringBuffer();
         content.append("new HashCodeBuilder(");
@@ -195,7 +270,9 @@ public final class HashCodeGenerator implements ILangGenerator {
         return content.toString();
     }
 
-    private static class HashCodeDialog extends FieldDialog {
+    private static class EqualsHashCodeDialog extends FieldDialog {
+
+        private boolean compareReferences;
 
         private Button imButtons[] = new Button[3];
 
@@ -213,9 +290,15 @@ public final class HashCodeGenerator implements ILangGenerator {
 
         private int multiplierNumber;
 
-        private IDialogSettings settings;
+        private IDialogSettings equalsSettings;
 
-        private static final String SETTINGS_SECTION = "HashCodeDialog";
+        private IDialogSettings hashCodeSettings;
+
+        private static final String EQUALS_SETTINGS_SECTION = "EqualsDialog";
+
+        private static final String HASHCODE_SETTINGS_SECTION = "HashCodeDialog";
+
+        private static final String SETTINGS_COMPARE_REFERENCES = "CompareReferences";
 
         private static final String SETTINGS_INIT_MULT_TYPE = "InitMultType";
 
@@ -223,7 +306,7 @@ public final class HashCodeGenerator implements ILangGenerator {
 
         private static final String SETTINGS_MULTIPLIER_NUMBER = "MultiplierNumber";
 
-        public HashCodeDialog(final Shell parentShell,
+        public EqualsHashCodeDialog(final Shell parentShell,
                 final String dialogTitle, final IType objectClass,
                 final IField[] fields, final Set excludedMethods)
                 throws JavaModelException {
@@ -234,25 +317,38 @@ public final class HashCodeGenerator implements ILangGenerator {
             IDialogSettings dialogSettings = Commons4ePlugin
                     .getDefault()
                     .getDialogSettings();
-            settings = dialogSettings.getSection(SETTINGS_SECTION);
-            if (settings == null) {
-                settings = dialogSettings.addNewSection(SETTINGS_SECTION);
+            equalsSettings = dialogSettings.getSection(EQUALS_SETTINGS_SECTION);
+            if (equalsSettings == null) {
+                equalsSettings = dialogSettings
+                        .addNewSection(EQUALS_SETTINGS_SECTION);
+            }
+
+            compareReferences = equalsSettings
+                    .getBoolean(SETTINGS_COMPARE_REFERENCES);
+
+            hashCodeSettings = dialogSettings
+                    .getSection(HASHCODE_SETTINGS_SECTION);
+            if (hashCodeSettings == null) {
+                hashCodeSettings = dialogSettings
+                        .addNewSection(HASHCODE_SETTINGS_SECTION);
             }
 
             try {
-                initMultType = settings.getInt(SETTINGS_INIT_MULT_TYPE);
+                initMultType = hashCodeSettings.getInt(SETTINGS_INIT_MULT_TYPE);
             } catch (NumberFormatException e) {
                 initMultType = 0;
             }
 
             try {
-                initialNumber = settings.getInt(SETTINGS_INITIAL_NUMBER);
+                initialNumber = hashCodeSettings
+                        .getInt(SETTINGS_INITIAL_NUMBER);
             } catch (NumberFormatException e) {
                 initialNumber = 17;
             }
 
             try {
-                multiplierNumber = settings.getInt(SETTINGS_MULTIPLIER_NUMBER);
+                multiplierNumber = hashCodeSettings
+                        .getInt(SETTINGS_MULTIPLIER_NUMBER);
             } catch (NumberFormatException e) {
                 multiplierNumber = 37;
             }
@@ -264,10 +360,11 @@ public final class HashCodeGenerator implements ILangGenerator {
          * @see org.eclipse.jface.window.Window#close()
          */
         public boolean close() {
+            equalsSettings.put(SETTINGS_COMPARE_REFERENCES, compareReferences);
             imNumbers[initMultType].setNumbers(initialNumber, multiplierNumber);
-            settings.put(SETTINGS_INIT_MULT_TYPE, initMultType);
-            settings.put(SETTINGS_INITIAL_NUMBER, initialNumber);
-            settings.put(SETTINGS_MULTIPLIER_NUMBER, multiplierNumber);
+            hashCodeSettings.put(SETTINGS_INIT_MULT_TYPE, initMultType);
+            hashCodeSettings.put(SETTINGS_INITIAL_NUMBER, initialNumber);
+            hashCodeSettings.put(SETTINGS_MULTIPLIER_NUMBER, multiplierNumber);
             return super.close();
         }
 
@@ -296,13 +393,40 @@ public final class HashCodeGenerator implements ILangGenerator {
          */
         protected Composite createOptionComposite(Composite composite) {
             Composite optionComposite = super.createOptionComposite(composite);
+            addCompareReferencesOption(optionComposite);
             addInitialMultiplierOptions(optionComposite);
             return optionComposite;
         }
 
+        private Composite addCompareReferencesOption(final Composite composite) {
+            Group group = new Group(composite, SWT.NONE);
+            group.setText("Equals");
+            group.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
+            GridLayout layout = new GridLayout(1, false);
+            group.setLayout(layout);
+
+            Button button = new Button(group, SWT.CHECK);
+            button.setText("Compare object &references");
+            button.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
+
+            button.addSelectionListener(new SelectionListener() {
+
+                public void widgetSelected(SelectionEvent e) {
+                    compareReferences = (((Button) e.widget).getSelection());
+                }
+
+                public void widgetDefaultSelected(SelectionEvent e) {
+                    widgetSelected(e);
+                }
+            });
+            button.setSelection(compareReferences);
+
+            return composite;
+        }
+
         private void addInitialMultiplierOptions(final Composite composite) {
             Group group = new Group(composite, SWT.NONE);
-            group.setText("Initial and multiplier numbers");
+            group.setText("HashCode - Initial and multiplier numbers");
             group.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
             GridLayout layout = new GridLayout(4, false);
             group.setLayout(layout);
@@ -444,10 +568,13 @@ public final class HashCodeGenerator implements ILangGenerator {
             getButton(IDialogConstants.OK_ID).setEnabled(true);
         }
 
+        public boolean getCompareReferences() {
+            return compareReferences;
+        }
+
         public IInitMultNumbers getInitMultNumbers() {
             return imNumbers[initMultType];
         }
-
     }
 
     private static interface IInitMultNumbers {
@@ -533,5 +660,4 @@ public final class HashCodeGenerator implements ILangGenerator {
         }
 
     }
-
 }

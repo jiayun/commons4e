@@ -24,15 +24,10 @@
                menubarPath="langMenu/langGroup"
                id="org.jiayun.commons4e.lang.actions.GenerateToStringAction"/>
          <action
-               label="Generate HashCode Method..."
+               label="Generate Equals and HashCode..."
                class="org.jiayun.commons4e.internal.lang.actions.GenerateAction"
                menubarPath="langMenu/langGroup"
-               id="org.jiayun.commons4e.lang.actions.GenerateHashCodeAction"/>
-         <action
-               label="Generate Equals Method..."
-               class="org.jiayun.commons4e.internal.lang.actions.GenerateAction"
-               menubarPath="langMenu/langGroup"
-               id="org.jiayun.commons4e.lang.actions.GenerateEqualsAction"/>
+               id="org.jiayun.commons4e.lang.actions.GenerateEqualsHashCodeAction"/>
       </objectContribution>
       <viewerContribution
             targetID="#CompilationUnitEditorContext"
@@ -54,15 +49,10 @@
                menubarPath="langMenu/langGroup"
                id="org.jiayun.commons4e.lang.actions.GenerateToStringAction"/>
          <action
-               label="Generate HashCode Method..."
+               label="Generate Equals and HashCode..."
                class="org.jiayun.commons4e.internal.lang.actions.ViewerContributionGenerateAction"
                menubarPath="langMenu/langGroup"
-               id="org.jiayun.commons4e.lang.actions.GenerateHashCodeAction"/>
-         <action
-               label="Generate Equals Method..."
-               class="org.jiayun.commons4e.internal.lang.actions.ViewerContributionGenerateAction"
-               menubarPath="langMenu/langGroup"
-               id="org.jiayun.commons4e.lang.actions.GenerateEqualsAction"/>
+               id="org.jiayun.commons4e.lang.actions.GenerateEqualsHashCodeAction"/>
       </viewerContribution>
    </extension>
    <extension

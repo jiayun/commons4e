@@ -3,5 +3,5 @@
       autobuild="false"
       scrub-output="false"
       use-console="true">
-   <feature id="org.jiayun.commons4e" version="1.0.7"/>
+   <feature id="org.jiayun.commons4e" version="1.0.8"/>
 </site-build>
