@@ -3,8 +3,7 @@
       id="org.jiayun.commons4e"
       label="Commons4E"
       version="1.0.8"
-      provider-name="JiaYun"
-      primary="true">
+      provider-name="JiaYun">
 
    <install-handler/>
 
