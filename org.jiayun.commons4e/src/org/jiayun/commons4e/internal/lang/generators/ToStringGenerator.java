@@ -25,8 +25,8 @@ import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.PartInitException;
 import org.jiayun.commons4e.Commons4ePlugin;
 import org.jiayun.commons4e.internal.ui.dialogs.OrderableFieldDialog;
-import org.jiayun.commons4e.internal.ui.preferences.PreferenceConstants;
 import org.jiayun.commons4e.internal.util.JavaUtils;
+import org.jiayun.commons4e.internal.util.PreferenceUtils;
 
 /**
  * @author jiayun
@@ -48,7 +48,7 @@ public final class ToStringGenerator implements ILangGenerator {
             + "SIMPLE_STYLE";
 
     private static final String[] STYLES = new String[] { DEFAULT_STYLE,
-            MULTI_LINE_STYLE, NO_FIELD_NAMES_STYLE, SIMPLE_STYLE};
+            MULTI_LINE_STYLE, NO_FIELD_NAMES_STYLE, SIMPLE_STYLE };
 
     private static final ILangGenerator instance = new ToStringGenerator();
 
@@ -111,15 +111,17 @@ public final class ToStringGenerator implements ILangGenerator {
         ICompilationUnit cu = objectClass.getCompilationUnit();
         IEditorPart javaEditor = JavaUI.openInEditor(cu);
 
-        boolean isCacheable = Commons4ePlugin
-                .getDefault()
-                .getPluginPreferences()
-                .getBoolean(PreferenceConstants.CACHE_TOSTRING)
+        boolean isCacheable = PreferenceUtils.getCacheToString()
                 && JavaUtils.areAllFinalFields(checkedFields);
+
+        boolean addOverride = PreferenceUtils.getAddOverride()
+                && PreferenceUtils
+                        .isSourceLevelGreaterThanOrEqualTo5(objectClass
+                                .getJavaProject());
 
         String styleConstant = getStyleConstantAndAddImport(style, objectClass);
         String source = createMethod(objectClass, checkedFields, appendSuper,
-                generateComment, styleConstant, isCacheable);
+                generateComment, styleConstant, isCacheable, addOverride);
 
         String formattedContent = JavaUtils.formatCode(parentShell,
                 objectClass, source);
@@ -129,10 +131,7 @@ public final class ToStringGenerator implements ILangGenerator {
         IMethod created = objectClass.createMethod(formattedContent,
                 insertPosition, true, null);
 
-        String cachingField = Commons4ePlugin
-                .getDefault()
-                .getPluginPreferences()
-                .getString(PreferenceConstants.TOSTRING_CACHING_FIELD);
+        String cachingField = PreferenceUtils.getToStringCachingField();
         IField field = objectClass.getField(cachingField);
         if (field.exists()) {
             field.delete(true, null);
@@ -180,7 +179,7 @@ public final class ToStringGenerator implements ILangGenerator {
     private String createMethod(final IType objectClass,
             final IField[] checkedFields, final boolean appendSuper,
             final boolean generateComment, final String styleConstant,
-            boolean isCacheable) {
+            final boolean isCacheable, final boolean addOverride) {
 
         StringBuffer content = new StringBuffer();
         if (generateComment) {
@@ -188,12 +187,12 @@ public final class ToStringGenerator implements ILangGenerator {
             content.append(" * @see java.lang.Object#toString()\n");
             content.append(" */\n");
         }
+        if (addOverride) {
+            content.append("@Override\n");
+        }
         content.append("public String toString() {\n");
         if (isCacheable) {
-            String cachingField = Commons4ePlugin
-                    .getDefault()
-                    .getPluginPreferences()
-                    .getString(PreferenceConstants.TOSTRING_CACHING_FIELD);
+            String cachingField = PreferenceUtils.getToStringCachingField();
             content.append("if (" + cachingField + "== null) {\n");
             content.append(cachingField + " = ");
             content.append(createBuilderString(checkedFields, appendSuper,
@@ -256,8 +255,7 @@ public final class ToStringGenerator implements ILangGenerator {
             super(parentShell, dialogTitle, objectClass, fields,
                     excludedMethods);
 
-            IDialogSettings dialogSettings = Commons4ePlugin
-                    .getDefault()
+            IDialogSettings dialogSettings = Commons4ePlugin.getDefault()
                     .getDialogSettings();
             settings = dialogSettings.getSection(SETTINGS_SECTION);
             if (settings == null) {

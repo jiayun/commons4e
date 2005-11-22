@@ -26,6 +26,8 @@ public class Commons4eBasePreferencePage extends FieldEditorPreferencePage
 
     private StringFieldEditor toStringField;
 
+    private BooleanFieldEditor addOverrideAnnotation;
+
     public Commons4eBasePreferencePage() {
         super(FieldEditorPreferencePage.GRID);
         setPreferenceStore(Commons4ePlugin.getDefault().getPreferenceStore());
@@ -46,7 +48,7 @@ public class Commons4eBasePreferencePage extends FieldEditorPreferencePage
         hashCodeField = new StringFieldEditor(
                 PreferenceConstants.HASHCODE_CACHING_FIELD,
                 "Hash&Code caching field", getFieldEditorParent());
-        //hashCodeField.setEmptyStringAllowed(false);
+        // hashCodeField.setEmptyStringAllowed(false);
         addField(hashCodeField);
 
         cacheToString = new BooleanFieldEditor(
@@ -58,8 +60,14 @@ public class Commons4eBasePreferencePage extends FieldEditorPreferencePage
         toStringField = new StringFieldEditor(
                 PreferenceConstants.TOSTRING_CACHING_FIELD,
                 "To&String caching field", getFieldEditorParent());
-        //toStringField.setEmptyStringAllowed(false);
+        // toStringField.setEmptyStringAllowed(false);
         addField(toStringField);
+
+        addOverrideAnnotation = new BooleanFieldEditor(
+                PreferenceConstants.ADD_OVERRIDE_ANNOTATION,
+                "Add @&Override when the source compatibility is 5.0 or above",
+                getFieldEditorParent());
+        addField(addOverrideAnnotation);
     }
 
     protected void checkState() {

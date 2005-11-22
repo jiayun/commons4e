@@ -20,13 +20,15 @@ public class PreferenceConstants {
 
     public static final String TOSTRING_CACHING_FIELD = "toStringCachingField";
 
+    public static final String ADD_OVERRIDE_ANNOTATION = "addOverrideAnnotation";
+
     public static void initializeDefaultValues() {
-        Preferences preferences = Commons4ePlugin
-                .getDefault()
+        Preferences preferences = Commons4ePlugin.getDefault()
                 .getPluginPreferences();
         preferences.setDefault(CACHE_HASHCODE, true);
         preferences.setDefault(HASHCODE_CACHING_FIELD, "hashCode");
         preferences.setDefault(CACHE_TOSTRING, true);
         preferences.setDefault(TOSTRING_CACHING_FIELD, "toString");
+        preferences.setDefault(ADD_OVERRIDE_ANNOTATION, false);
     }
 }

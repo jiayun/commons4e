@@ -39,8 +39,8 @@ import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.PartInitException;
 import org.jiayun.commons4e.Commons4ePlugin;
 import org.jiayun.commons4e.internal.ui.dialogs.FieldDialog;
-import org.jiayun.commons4e.internal.ui.preferences.PreferenceConstants;
 import org.jiayun.commons4e.internal.util.JavaUtils;
+import org.jiayun.commons4e.internal.util.PreferenceUtils;
 
 /**
  * @author jiayun
@@ -65,7 +65,7 @@ public final class EqualsHashCodeGenerator implements ILangGenerator {
     public void generate(Shell parentShell, IType objectClass) {
 
         IMethod existingEquals = objectClass.getMethod("equals",
-                new String[] { "QObject;"});
+                new String[] { "QObject;" });
         IMethod existingHashCode = objectClass.getMethod("hashCode",
                 new String[0]);
         Set excludedMethods = new HashSet();
@@ -77,8 +77,8 @@ public final class EqualsHashCodeGenerator implements ILangGenerator {
         }
         try {
             EqualsHashCodeDialog dialog = new EqualsHashCodeDialog(parentShell,
-                    "Generate Equals and HashCode", objectClass,
-                    JavaUtils.getNonStaticNonCacheFields(objectClass),
+                    "Generate Equals and HashCode", objectClass, JavaUtils
+                            .getNonStaticNonCacheFields(objectClass),
                     excludedMethods);
             int returnCode = dialog.open();
             if (returnCode == Window.OK) {
@@ -97,9 +97,9 @@ public final class EqualsHashCodeGenerator implements ILangGenerator {
                 boolean compareReferences = dialog.getCompareReferences();
                 IInitMultNumbers imNumbers = dialog.getInitMultNumbers();
 
-                IJavaElement created = generateHashCode(parentShell, objectClass,
-                        checkedFields, insertPosition, appendSuper,
-                        generateComment, imNumbers);
+                IJavaElement created = generateHashCode(parentShell,
+                        objectClass, checkedFields, insertPosition,
+                        appendSuper, generateComment, imNumbers);
 
                 created = generateEquals(parentShell, objectClass,
                         checkedFields, created, appendSuper, generateComment,
@@ -123,8 +123,13 @@ public final class EqualsHashCodeGenerator implements ILangGenerator {
             final boolean generateComment, final boolean compareReferences)
             throws PartInitException, JavaModelException {
 
+        boolean addOverride = PreferenceUtils.getAddOverride()
+                && PreferenceUtils
+                        .isSourceLevelGreaterThanOrEqualTo5(objectClass
+                                .getJavaProject());
+
         String source = createEqualsMethod(objectClass, checkedFields,
-                appendSuper, generateComment, compareReferences);
+                appendSuper, generateComment, compareReferences, addOverride);
 
         String formattedContent = JavaUtils.formatCode(parentShell,
                 objectClass, source);
@@ -139,7 +144,8 @@ public final class EqualsHashCodeGenerator implements ILangGenerator {
 
     private String createEqualsMethod(final IType objectClass,
             final IField[] checkedFields, final boolean appendSuper,
-            final boolean generateComment, final boolean compareReferences) {
+            final boolean generateComment, final boolean compareReferences,
+            final boolean addOverride) {
 
         StringBuffer content = new StringBuffer();
         if (generateComment) {
@@ -147,6 +153,9 @@ public final class EqualsHashCodeGenerator implements ILangGenerator {
             content
                     .append(" * @see java.lang.Object#equals(java.lang.Object)\n");
             content.append(" */\n");
+        }
+        if (addOverride) {
+            content.append("@Override\n");
         }
         content.append("public boolean equals(final Object other) {\n");
         if (compareReferences) {
@@ -182,14 +191,17 @@ public final class EqualsHashCodeGenerator implements ILangGenerator {
             final boolean generateComment, final IInitMultNumbers imNumbers)
             throws PartInitException, JavaModelException {
 
-        boolean isCacheable = Commons4ePlugin
-                .getDefault()
-                .getPluginPreferences()
-                .getBoolean(PreferenceConstants.CACHE_HASHCODE)
+        boolean isCacheable = PreferenceUtils.getCacheHashCode()
                 && JavaUtils.areAllFinalFields(checkedFields);
 
+        boolean addOverride = PreferenceUtils.getAddOverride()
+                && PreferenceUtils
+                        .isSourceLevelGreaterThanOrEqualTo5(objectClass
+                                .getJavaProject());
+
         String source = createHashCodeMethod(objectClass, checkedFields,
-                appendSuper, generateComment, imNumbers, isCacheable);
+                appendSuper, generateComment, imNumbers, isCacheable,
+                addOverride);
 
         String formattedContent = JavaUtils.formatCode(parentShell,
                 objectClass, source);
@@ -199,10 +211,7 @@ public final class EqualsHashCodeGenerator implements ILangGenerator {
         IJavaElement created = objectClass.createMethod(formattedContent,
                 insertPosition, true, null);
 
-        String cachingField = Commons4ePlugin
-                .getDefault()
-                .getPluginPreferences()
-                .getString(PreferenceConstants.HASHCODE_CACHING_FIELD);
+        String cachingField = PreferenceUtils.getHashCodeCachingField();
         IField field = objectClass.getField(cachingField);
         if (field.exists()) {
             field.delete(true, null);
@@ -211,7 +220,8 @@ public final class EqualsHashCodeGenerator implements ILangGenerator {
             String fieldSrc = "private transient int " + cachingField + ";\n\n";
             String formattedFieldSrc = JavaUtils.formatCode(parentShell,
                     objectClass, fieldSrc);
-            created = objectClass.createField(formattedFieldSrc, created, true, null);
+            created = objectClass.createField(formattedFieldSrc, created, true,
+                    null);
         }
 
         return created;
@@ -220,7 +230,7 @@ public final class EqualsHashCodeGenerator implements ILangGenerator {
     private String createHashCodeMethod(final IType objectClass,
             final IField[] checkedFields, final boolean appendSuper,
             final boolean generateComment, final IInitMultNumbers imNumbers,
-            boolean isCacheable) {
+            final boolean isCacheable, final boolean addOverride) {
 
         StringBuffer content = new StringBuffer();
         if (generateComment) {
@@ -228,12 +238,12 @@ public final class EqualsHashCodeGenerator implements ILangGenerator {
             content.append(" * @see java.lang.Object#hashCode()\n");
             content.append(" */\n");
         }
+        if (addOverride) {
+            content.append("@Override\n");
+        }
         content.append("public int hashCode() {\n");
         if (isCacheable) {
-            String cachingField = Commons4ePlugin
-                    .getDefault()
-                    .getPluginPreferences()
-                    .getString(PreferenceConstants.HASHCODE_CACHING_FIELD);
+            String cachingField = PreferenceUtils.getHashCodeCachingField();
             content.append("if (" + cachingField + "== 0) {\n");
             content.append(cachingField + " = ");
             content.append(createHashCodeBuilderString(checkedFields,
@@ -282,7 +292,7 @@ public final class EqualsHashCodeGenerator implements ILangGenerator {
 
         private IInitMultNumbers imNumbers[] = new IInitMultNumbers[] {
                 new DefaultInitMultNumbers(), new RandomInitMultNumbers(),
-                new CustomInitMultNumbers()};
+                new CustomInitMultNumbers() };
 
         private int initMultType;
 
@@ -314,8 +324,7 @@ public final class EqualsHashCodeGenerator implements ILangGenerator {
             super(parentShell, dialogTitle, objectClass, fields,
                     excludedMethods);
 
-            IDialogSettings dialogSettings = Commons4ePlugin
-                    .getDefault()
+            IDialogSettings dialogSettings = Commons4ePlugin.getDefault()
                     .getDialogSettings();
             equalsSettings = dialogSettings.getSection(EQUALS_SETTINGS_SECTION);
             if (equalsSettings == null) {
