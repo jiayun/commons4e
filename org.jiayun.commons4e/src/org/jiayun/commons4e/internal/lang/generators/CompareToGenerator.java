@@ -14,12 +14,15 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.InvalidInputException;
 import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.PartInitException;
 import org.jiayun.commons4e.internal.ui.dialogs.OrderableFieldDialog;
 import org.jiayun.commons4e.internal.util.JavaUtils;
+import org.jiayun.commons4e.internal.util.PreferenceUtils;
 
 /**
  * @author jiayun
@@ -43,16 +46,25 @@ public final class CompareToGenerator implements ILangGenerator {
      */
     public void generate(Shell parentShell, IType objectClass) {
 
-        IMethod existingMethod = objectClass.getMethod("compareTo",
-                new String[] { "QObject;"});
         Set excludedMethods = new HashSet();
+
+        IMethod existingMethod = objectClass.getMethod("compareTo",
+                new String[] { "QObject;" });
+
+        if (!existingMethod.exists()) {
+            existingMethod = objectClass.getMethod("compareTo",
+                    new String[] { "Q" + objectClass.getElementName() + ";" });
+        }
+
         if (existingMethod.exists()) {
             excludedMethods.add(existingMethod);
         }
+
         try {
             OrderableFieldDialog dialog = new OrderableFieldDialog(parentShell,
                     "Generate CompareTo Method", objectClass, JavaUtils
-                            .getNonStaticNonCacheFields(objectClass), excludedMethods);
+                            .getNonStaticNonCacheFields(objectClass),
+                    excludedMethods);
             int returnCode = dialog.open();
             if (returnCode == Window.OK) {
 
@@ -72,6 +84,9 @@ public final class CompareToGenerator implements ILangGenerator {
         } catch (CoreException e) {
             MessageDialog.openError(parentShell, "Method Generation Failed", e
                     .getMessage());
+        } catch (BadLocationException e) {
+            MessageDialog.openError(parentShell, "Method Generation Failed", e
+                    .getMessage());
         }
 
     }
@@ -80,21 +95,36 @@ public final class CompareToGenerator implements ILangGenerator {
             final IType objectClass, final IField[] checkedFields,
             final IJavaElement insertPosition, final boolean appendSuper,
             final boolean generateComment) throws PartInitException,
-            JavaModelException {
+            JavaModelException, MalformedTreeException, BadLocationException {
 
         ICompilationUnit cu = objectClass.getCompilationUnit();
         IEditorPart javaEditor = JavaUI.openInEditor(cu);
 
-        try {
-            JavaUtils.addSuperInterface(objectClass, "Comparable");
-        } catch (InvalidInputException e) {
-            MessageDialog.openError(parentShell, "Error",
-                    "Failed to add Comparable to implements clause:\n"
-                            + e.getMessage());
+        boolean implementedOrExtendedInSuperType = JavaUtils
+                .isImplementedOrExtendedInSupertype(objectClass, "Comparable");
+        boolean generify = PreferenceUtils.getGenerifyCompareTo()
+                && PreferenceUtils
+                        .isSourceLevelGreaterThanOrEqualTo5(objectClass
+                                .getJavaProject())
+                && !implementedOrExtendedInSuperType;
+
+        if (!implementedOrExtendedInSuperType) {
+            try {
+                if (generify) {
+                    JavaUtils.addSuperInterface(objectClass, "Comparable<"
+                            + objectClass.getElementName() + ">");
+                } else {
+                    JavaUtils.addSuperInterface(objectClass, "Comparable");
+                }
+            } catch (InvalidInputException e) {
+                MessageDialog.openError(parentShell, "Error",
+                        "Failed to add Comparable to implements clause:\n"
+                                + e.getMessage());
+            }
         }
 
         String source = createMethod(objectClass, checkedFields, appendSuper,
-                generateComment);
+                generateComment, generify);
 
         String formattedContent = JavaUtils.formatCode(parentShell,
                 objectClass, source);
@@ -109,7 +139,7 @@ public final class CompareToGenerator implements ILangGenerator {
 
     private String createMethod(final IType objectClass,
             final IField[] checkedFields, final boolean appendSuper,
-            final boolean generateComment) {
+            final boolean generateComment, final boolean generify) {
 
         StringBuffer content = new StringBuffer();
         if (generateComment) {
@@ -118,11 +148,21 @@ public final class CompareToGenerator implements ILangGenerator {
                     .append(" * @see java.lang.Comparable#compareTo(java.lang.Object)\n");
             content.append(" */\n");
         }
-        content.append("public int compareTo(final Object other) {\n");
-        content.append(objectClass.getElementName());
-        content.append(" castOther = (");
-        content.append(objectClass.getElementName());
-        content.append(") other;\n");
+        String other;
+        if (generify) {
+            content.append("public int compareTo(final "
+                    + objectClass.getElementName() + " other) {\n");
+
+            other = "other";
+        } else {
+            content.append("public int compareTo(final Object other) {\n");
+            content.append(objectClass.getElementName());
+            content.append(" castOther = (");
+            content.append(objectClass.getElementName());
+            content.append(") other;\n");
+
+            other = "castOther";
+        }
         content.append("return new CompareToBuilder()");
         if (appendSuper) {
             content.append(".appendSuper(super.compareTo(other))");
@@ -130,7 +170,7 @@ public final class CompareToGenerator implements ILangGenerator {
         for (int i = 0; i < checkedFields.length; i++) {
             content.append(".append(");
             content.append(checkedFields[i].getElementName());
-            content.append(", castOther.");
+            content.append(", " + other + ".");
             content.append(checkedFields[i].getElementName());
             content.append(")");
         }

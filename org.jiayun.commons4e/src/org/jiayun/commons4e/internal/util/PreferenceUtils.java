@@ -39,6 +39,11 @@ public final class PreferenceUtils {
                 PreferenceConstants.ADD_OVERRIDE_ANNOTATION);
     }
 
+    public static boolean getGenerifyCompareTo() {
+        return Commons4ePlugin.getDefault().getPluginPreferences().getBoolean(
+                PreferenceConstants.GENERIFY_COMPARETO);
+    }
+
     public static boolean isSourceLevelGreaterThanOrEqualTo5(
             IJavaProject project) {
         float sc = Float.parseFloat(project.getOption(JavaCore.COMPILER_SOURCE,

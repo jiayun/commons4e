@@ -22,6 +22,8 @@ public class PreferenceConstants {
 
     public static final String ADD_OVERRIDE_ANNOTATION = "addOverrideAnnotation";
 
+    public static final String GENERIFY_COMPARETO = "generifyCompareTo";
+
     public static void initializeDefaultValues() {
         Preferences preferences = Commons4ePlugin.getDefault()
                 .getPluginPreferences();
@@ -29,6 +31,7 @@ public class PreferenceConstants {
         preferences.setDefault(HASHCODE_CACHING_FIELD, "hashCode");
         preferences.setDefault(CACHE_TOSTRING, true);
         preferences.setDefault(TOSTRING_CACHING_FIELD, "toString");
-        preferences.setDefault(ADD_OVERRIDE_ANNOTATION, false);
+        preferences.setDefault(ADD_OVERRIDE_ANNOTATION, true);
+        preferences.setDefault(GENERIFY_COMPARETO, true);
     }
 }

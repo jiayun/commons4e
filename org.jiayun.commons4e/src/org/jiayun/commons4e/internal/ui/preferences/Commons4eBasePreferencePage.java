@@ -28,6 +28,8 @@ public class Commons4eBasePreferencePage extends FieldEditorPreferencePage
 
     private BooleanFieldEditor addOverrideAnnotation;
 
+    private BooleanFieldEditor generifyCompareTo;
+
     public Commons4eBasePreferencePage() {
         super(FieldEditorPreferencePage.GRID);
         setPreferenceStore(Commons4ePlugin.getDefault().getPreferenceStore());
@@ -68,6 +70,12 @@ public class Commons4eBasePreferencePage extends FieldEditorPreferencePage
                 "Add @&Override when the source compatibility is 5.0 or above",
                 getFieldEditorParent());
         addField(addOverrideAnnotation);
+
+        generifyCompareTo = new BooleanFieldEditor(
+                PreferenceConstants.GENERIFY_COMPARETO,
+                "&Generify compareTo when the source compatibility is 5.0 or above",
+                getFieldEditorParent());
+        addField(generifyCompareTo);
     }
 
     protected void checkState() {

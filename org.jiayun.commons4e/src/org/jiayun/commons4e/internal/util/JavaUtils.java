@@ -23,6 +23,11 @@ import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.compiler.IScanner;
 import org.eclipse.jdt.core.compiler.ITerminalSymbols;
 import org.eclipse.jdt.core.compiler.InvalidInputException;
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.Type;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.formatter.CodeFormatter;
 import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -30,6 +35,7 @@ import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.TextEdit;
 import org.jiayun.commons4e.Commons4ePlugin;
 import org.jiayun.commons4e.internal.ui.preferences.PreferenceConstants;
@@ -47,16 +53,60 @@ public final class JavaUtils {
     private JavaUtils() {
     }
 
-    public static void addSuperInterface(final IType objectClass,
-            final String interfaceName) throws JavaModelException,
-            InvalidInputException {
+    private static String getSimpleInterfaceName(final String interfaceName) {
+        if (interfaceName.indexOf('<') == -1) {
+            return interfaceName;
+        } else {
+            return interfaceName.substring(0, interfaceName.indexOf('<'));
+        }
+    }
+
+    public static boolean isImplementedOrExtendedInSupertype(
+            final IType objectClass, final String interfaceName)
+            throws JavaModelException {
+
+        String simpleName = getSimpleInterfaceName(interfaceName);
 
         ITypeHierarchy typeHierarchy = objectClass.newSupertypeHierarchy(null);
         IType[] interfaces = typeHierarchy.getAllInterfaces();
         for (int i = 0, size = interfaces.length; i < size; i++) {
-            if (interfaces[i].getElementName().equals(interfaceName)) {
-                return;
+            if (interfaces[i].getElementName().equals(simpleName)) {
+                IType in = interfaces[i];
+                IType[] types = typeHierarchy.getImplementingClasses(in);
+                for (int j = 0, s = types.length; j < s; j++) {
+                    if (!types[j].getFullyQualifiedName().equals(
+                            objectClass.getFullyQualifiedName())) {
+                        return true;
+                    }
+                }
+
+                types = typeHierarchy.getExtendingInterfaces(in);
+                for (int j = 0, s = types.length; j < s; j++) {
+                    if (!types[j].getFullyQualifiedName().equals(
+                            objectClass.getFullyQualifiedName())) {
+                        return true;
+                    }
+                }
             }
+        }
+        return false;
+    }
+
+    public static void addSuperInterface(final IType objectClass,
+            final String interfaceName) throws JavaModelException,
+            InvalidInputException, MalformedTreeException, BadLocationException {
+
+        if (isImplementedOrExtendedInSupertype(objectClass, interfaceName))
+            return;
+
+        String[] interfaces = objectClass.getSuperInterfaceNames();
+        String simpleName = getSimpleInterfaceName(interfaceName);
+        boolean foundButTypeParamsNotMatched = false;
+        for (int i = 0, size = interfaces.length; i < size; i++) {
+            if (interfaces[i].equals(interfaceName))
+                return;
+            if (interfaces[i].startsWith(simpleName))
+                foundButTypeParamsNotMatched = true;
         }
 
         ICompilationUnit cu = objectClass.getCompilationUnit();
@@ -68,7 +118,7 @@ public final class JavaUtils {
         scanner.resetTo(objectClass.getNameRange().getOffset(),
                 source.length - 1);
 
-        if (objectClass.getSuperInterfaceNames().length == 0) {
+        if (interfaces.length == 0) {
 
             while (true) {
                 int token = scanner.getNextToken();
@@ -79,6 +129,26 @@ public final class JavaUtils {
                     break;
                 }
             }
+
+        } else if (foundButTypeParamsNotMatched) {
+
+            ASTParser parser = ASTParser.newParser(AST.JLS3);
+            parser.setSource(cu);
+            parser.setResolveBindings(true);
+            CompilationUnit cuNode = (CompilationUnit) parser.createAST(null);
+            TypeDeclaration classNode = (TypeDeclaration) cuNode
+                    .findDeclaringNode(objectClass.getKey());
+            List ifTypes = classNode.superInterfaceTypes();
+            Type targetIf = null;
+            for (int i = 0; i < ifTypes.size(); i++) {
+                targetIf = (Type) ifTypes.get(i);
+                if (targetIf.resolveBinding().getName().startsWith(simpleName)) {
+                    break;
+                }
+            }
+
+            buffer.replace(targetIf.getStartPosition(), targetIf.getLength(),
+                    interfaceName);
 
         } else {
 
@@ -111,13 +181,9 @@ public final class JavaUtils {
             throws JavaModelException {
 
         Set cacheFields = new HashSet();
-        cacheFields.add(Commons4ePlugin
-                .getDefault()
-                .getPreferenceStore()
+        cacheFields.add(Commons4ePlugin.getDefault().getPreferenceStore()
                 .getString(PreferenceConstants.HASHCODE_CACHING_FIELD));
-        cacheFields.add(Commons4ePlugin
-                .getDefault()
-                .getPreferenceStore()
+        cacheFields.add(Commons4ePlugin.getDefault().getPreferenceStore()
                 .getString(PreferenceConstants.TOSTRING_CACHING_FIELD));
 
         IField[] fields;
@@ -190,8 +256,7 @@ public final class JavaUtils {
                     .getAncestor(IJavaElement.COMPILATION_UNIT);
             if (cu != null) {
                 IBuffer buf = cu.getBuffer();
-                int offset = ((ISourceReference) elem)
-                        .getSourceRange()
+                int offset = ((ISourceReference) elem).getSourceRange()
                         .getOffset();
                 int i = offset;
                 // find beginning of line
