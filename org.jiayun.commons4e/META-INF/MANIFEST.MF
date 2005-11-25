@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-Name: Commons4E
 Bundle-SymbolicName: org.jiayun.commons4e; singleton=true
-Bundle-Version: 1.0.8
+Bundle-Version: 1.1.8
 Bundle-ClassPath: commons4e.jar
 Bundle-Activator: org.jiayun.commons4e.Commons4ePlugin
 Bundle-Vendor: JiaYun

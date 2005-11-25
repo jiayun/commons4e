@@ -2,9 +2,8 @@
 <feature
       id="org.jiayun.commons4e"
       label="Commons4E"
-      version="1.0.8"
+      version="1.1.8"
       provider-name="JiaYun">
-
    <install-handler/>
 
    <description url="http://commons4e.berlios.de/">
@@ -105,7 +104,7 @@ This Agreement is governed by the laws of the State of New York and the intellec
    </license>
 
    <url>
-      <update label="Commons4E" url="http://commons4e.berlios.de/updatesite"/>
+      <update label="Commons4E" url="http://commons4e.berlios.de/updatesite31"/>
    </url>
 
    <requires>
@@ -121,6 +120,7 @@ This Agreement is governed by the laws of the State of New York and the intellec
          id="org.jiayun.commons4e"
          download-size="0"
          install-size="0"
-         version="1.0.8"/>
+         version="0.0.0"
+         unpack="false"/>
 
 </feature>
