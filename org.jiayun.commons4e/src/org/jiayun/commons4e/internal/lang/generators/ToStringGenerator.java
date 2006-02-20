@@ -44,11 +44,15 @@ public final class ToStringGenerator implements ILangGenerator {
     private static final String NO_FIELD_NAMES_STYLE = STYLE_PREFIX + "."
             + "NO_FIELD_NAMES_STYLE";
 
+    private static final String SHORT_PREFIX_STYLE = STYLE_PREFIX + "."
+            + "SHORT_PREFIX_STYLE";
+
     private static final String SIMPLE_STYLE = STYLE_PREFIX + "."
             + "SIMPLE_STYLE";
 
     private static final String[] STYLES = new String[] { DEFAULT_STYLE,
-            MULTI_LINE_STYLE, NO_FIELD_NAMES_STYLE, SIMPLE_STYLE };
+            MULTI_LINE_STYLE, NO_FIELD_NAMES_STYLE, SHORT_PREFIX_STYLE,
+            SIMPLE_STYLE };
 
     private static final ILangGenerator instance = new ToStringGenerator();
 
