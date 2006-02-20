@@ -61,9 +61,8 @@ public final class JavaUtils {
         }
     }
 
-    public static boolean isImplementedOrExtendedInSupertype(
-            final IType objectClass, final String interfaceName)
-            throws JavaModelException {
+    public static boolean isImplementedInSupertype(final IType objectClass,
+            final String interfaceName) throws JavaModelException {
 
         String simpleName = getSimpleInterfaceName(interfaceName);
 
@@ -79,14 +78,34 @@ public final class JavaUtils {
                         return true;
                     }
                 }
+                break;
+            }
+        }
+        return false;
+    }
 
-                types = typeHierarchy.getExtendingInterfaces(in);
+    public static boolean isImplementedOrExtendedInSupertype(
+            final IType objectClass, final String interfaceName)
+            throws JavaModelException {
+
+        if (isImplementedInSupertype(objectClass, interfaceName))
+            return true;
+
+        String simpleName = getSimpleInterfaceName(interfaceName);
+
+        ITypeHierarchy typeHierarchy = objectClass.newSupertypeHierarchy(null);
+        IType[] interfaces = typeHierarchy.getAllInterfaces();
+        for (int i = 0, size = interfaces.length; i < size; i++) {
+            if (interfaces[i].getElementName().equals(simpleName)) {
+                IType in = interfaces[i];
+                IType[] types = typeHierarchy.getExtendingInterfaces(in);
                 for (int j = 0, s = types.length; j < s; j++) {
                     if (!types[j].getFullyQualifiedName().equals(
                             objectClass.getFullyQualifiedName())) {
                         return true;
                     }
                 }
+                break;
             }
         }
         return false;

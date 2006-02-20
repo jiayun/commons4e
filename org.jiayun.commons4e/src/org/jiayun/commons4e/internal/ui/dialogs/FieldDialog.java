@@ -63,6 +63,8 @@ public class FieldDialog extends Dialog {
 
     private int currentPositionIndex;
 
+    private boolean disableAppendSuper;
+
     private boolean appendSuper;
 
     private boolean generateComment;
@@ -77,6 +79,13 @@ public class FieldDialog extends Dialog {
 
     private static final String SETTINGS_GENERATE_COMMENT = "GenerateComment";
 
+    public FieldDialog(final Shell parentShell, final String dialogTitle,
+            final IType objectClass, final IField[] fields,
+            final Set excludedMethods) throws JavaModelException {
+        this(parentShell, dialogTitle, objectClass, fields, excludedMethods,
+                false);
+    }
+
     /**
      * @param parentShell
      * @param dialogTitle
@@ -88,15 +97,16 @@ public class FieldDialog extends Dialog {
      */
     public FieldDialog(final Shell parentShell, final String dialogTitle,
             final IType objectClass, final IField[] fields,
-            final Set excludedMethods) throws JavaModelException {
+            final Set excludedMethods, final boolean disableAppendSuper)
+            throws JavaModelException {
         super(parentShell);
         setShellStyle(SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL | SWT.RESIZE);
         this.title = dialogTitle;
         this.objectClass = objectClass;
         this.fields = fields;
+        this.disableAppendSuper = disableAppendSuper;
 
-        IDialogSettings dialogSettings = Commons4ePlugin
-                .getDefault()
+        IDialogSettings dialogSettings = Commons4ePlugin.getDefault()
                 .getDialogSettings();
         settings = dialogSettings.getSection(SETTINGS_SECTION);
         if (settings == null) {
@@ -108,7 +118,12 @@ public class FieldDialog extends Dialog {
         } catch (NumberFormatException e) {
             currentPositionIndex = 0;
         }
-        appendSuper = settings.getBoolean(SETTINGS_APPEND_SUPER);
+
+        if (disableAppendSuper) {
+            appendSuper = false;
+        } else {
+            appendSuper = settings.getBoolean(SETTINGS_APPEND_SUPER);
+        }
         generateComment = settings.getBoolean(SETTINGS_GENERATE_COMMENT);
 
         insertPositions = new ArrayList();
@@ -178,7 +193,10 @@ public class FieldDialog extends Dialog {
         if (currentPositionIndex == 0 || currentPositionIndex == 1) {
             settings.put(SETTINGS_INSERT_POSITION, currentPositionIndex);
         }
-        settings.put(SETTINGS_APPEND_SUPER, appendSuper);
+
+        if (!disableAppendSuper) {
+            settings.put(SETTINGS_APPEND_SUPER, appendSuper);
+        }
         settings.put(SETTINGS_GENERATE_COMMENT, generateComment);
 
         return super.close();
@@ -351,7 +369,13 @@ public class FieldDialog extends Dialog {
                 widgetSelected(e);
             }
         });
-        appendButton.setSelection(appendSuper);
+
+        if (disableAppendSuper) {
+            appendButton.setSelection(false);
+            appendButton.setEnabled(false);
+        } else {
+            appendButton.setSelection(appendSuper);
+        }
 
         return composite;
     }

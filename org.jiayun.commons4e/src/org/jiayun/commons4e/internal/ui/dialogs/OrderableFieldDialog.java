@@ -34,8 +34,15 @@ public class OrderableFieldDialog extends FieldDialog {
     public OrderableFieldDialog(Shell parentShell, String dialogTitle,
             IType objectClass, IField[] fields, Set excludedMethods)
             throws JavaModelException {
-        super(parentShell, dialogTitle, objectClass, fields,
-                excludedMethods);
+        this(parentShell, dialogTitle, objectClass, fields, excludedMethods,
+                false);
+    }
+
+    public OrderableFieldDialog(Shell parentShell, String dialogTitle,
+            IType objectClass, IField[] fields, Set excludedMethods,
+            boolean disableAppendSuper) throws JavaModelException {
+        super(parentShell, dialogTitle, objectClass, fields, excludedMethods,
+                disableAppendSuper);
     }
 
     public void create() {
