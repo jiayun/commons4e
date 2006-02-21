@@ -61,6 +61,70 @@ public final class JavaUtils {
         }
     }
 
+    public static boolean isDirectSubclassOfObject(final IType objectClass)
+            throws JavaModelException {
+        String superclass = objectClass.getSuperclassName();
+
+        if (superclass == null)
+            return true;
+        if (superclass.equals("Object"))
+            return true;
+        if (superclass.equals("java.lang.Object"))
+            return true;
+
+        return false;
+    }
+
+    /**
+     * Check if the method specified in the methodName and
+     * methodParameterTypeSignatures parameters is overridden in a subclass of
+     * the original declared class, and that subclass is a superclass of
+     * objectClass.
+     * 
+     * @param objectClass
+     * @param methodName
+     * @param methodParameterTypeSignatures
+     * @param originalClassFullyQualifiedName
+     * @return
+     * @throws JavaModelException
+     */
+    public static boolean isOverriddenInSuperclass(final IType objectClass,
+            final String methodName,
+            final String[] methodParameterTypeSignatures,
+            final String originalClassFullyQualifiedName)
+            throws JavaModelException {
+        ITypeHierarchy typeHierarchy = objectClass.newSupertypeHierarchy(null);
+        IType[] superclasses = typeHierarchy.getAllSuperclasses(objectClass);
+
+        if (superclasses.length == 0)
+            return false;
+
+        for (int i = 0; i < superclasses.length; i++) {
+            if (superclasses[i].getFullyQualifiedName().equals(
+                    originalClassFullyQualifiedName))
+                return false;
+
+            IMethod method = superclasses[i].getMethod(methodName,
+                    methodParameterTypeSignatures);
+            if (method.exists())
+                return true;
+        }
+
+        return false;
+    }
+
+    public static boolean isEqualsOverriddenInSuperclass(final IType objectClass)
+            throws JavaModelException {
+        return isOverriddenInSuperclass(objectClass, "equals",
+                new String[] { "QObject;" }, "java.lang.Object");
+    }
+
+    public static boolean isHashCodeOverriddenInSuperclass(
+            final IType objectClass) throws JavaModelException {
+        return isOverriddenInSuperclass(objectClass, "hashCode", new String[0],
+                "java.lang.Object");
+    }
+
     public static boolean isImplementedInSupertype(final IType objectClass,
             final String interfaceName) throws JavaModelException {
 
@@ -68,11 +132,11 @@ public final class JavaUtils {
 
         ITypeHierarchy typeHierarchy = objectClass.newSupertypeHierarchy(null);
         IType[] interfaces = typeHierarchy.getAllInterfaces();
-        for (int i = 0, size = interfaces.length; i < size; i++) {
+        for (int i = 0; i < interfaces.length; i++) {
             if (interfaces[i].getElementName().equals(simpleName)) {
                 IType in = interfaces[i];
                 IType[] types = typeHierarchy.getImplementingClasses(in);
-                for (int j = 0, s = types.length; j < s; j++) {
+                for (int j = 0; j < types.length; j++) {
                     if (!types[j].getFullyQualifiedName().equals(
                             objectClass.getFullyQualifiedName())) {
                         return true;
@@ -95,11 +159,11 @@ public final class JavaUtils {
 
         ITypeHierarchy typeHierarchy = objectClass.newSupertypeHierarchy(null);
         IType[] interfaces = typeHierarchy.getAllInterfaces();
-        for (int i = 0, size = interfaces.length; i < size; i++) {
+        for (int i = 0; i < interfaces.length; i++) {
             if (interfaces[i].getElementName().equals(simpleName)) {
                 IType in = interfaces[i];
                 IType[] types = typeHierarchy.getExtendingInterfaces(in);
-                for (int j = 0, s = types.length; j < s; j++) {
+                for (int j = 0; j < types.length; j++) {
                     if (!types[j].getFullyQualifiedName().equals(
                             objectClass.getFullyQualifiedName())) {
                         return true;
