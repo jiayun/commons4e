@@ -65,7 +65,7 @@ public final class CompareToGenerator implements ILangGenerator {
                     "Generate CompareTo Method", objectClass, JavaUtils
                             .getNonStaticNonCacheFields(objectClass),
                     excludedMethods, !JavaUtils
-                            .isImplementedOrExtendedInSupertype(objectClass,
+                            .isImplementedInSupertype(objectClass,
                                     "Comparable"));
             int returnCode = dialog.open();
             if (returnCode == Window.OK) {
