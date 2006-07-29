@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMember;
@@ -276,7 +277,22 @@ public class FieldDialog extends Dialog {
         fieldViewer.setLabelProvider(new JavaElementLabelProvider());
         fieldViewer.setContentProvider(new ArrayContentProvider());
         fieldViewer.setInput(fields);
+        selectAllNonTransientFields();
         return fieldComposite;
+    }
+
+    private void selectAllNonTransientFields() {
+        int size = fieldViewer.getTable().getItemCount();
+        for (int i = 0; i < size; i++) {
+            IField f = (IField) fieldViewer.getElementAt(i);
+            try {
+                if (!Flags.isTransient(f.getFlags())) {
+                    fieldViewer.setChecked(f, true);
+                }
+            } catch (JavaModelException e) {
+                // ignore
+            }
+        }
     }
 
     private Composite createButtonComposite(final Composite composite) {
