@@ -81,7 +81,8 @@ public final class ToStringGenerator implements ILangGenerator {
             ToStringDialog dialog = new ToStringDialog(parentShell,
                     "Generate ToString Method", objectClass, JavaUtils
                             .getNonStaticNonCacheFields(objectClass),
-                    excludedMethods);
+                    excludedMethods, !JavaUtils
+                            .isToStringConcreteInSuperclass(objectClass));
             int returnCode = dialog.open();
             if (returnCode == Window.OK) {
 
@@ -253,11 +254,11 @@ public final class ToStringGenerator implements ILangGenerator {
 
         public ToStringDialog(final Shell parentShell,
                 final String dialogTitle, final IType objectClass,
-                final IField[] fields, final Set excludedMethods)
-                throws JavaModelException {
+                final IField[] fields, final Set excludedMethods,
+                final boolean disableAppendSuper) throws JavaModelException {
 
             super(parentShell, dialogTitle, objectClass, fields,
-                    excludedMethods);
+                    excludedMethods, disableAppendSuper);
 
             IDialogSettings dialogSettings = Commons4ePlugin.getDefault()
                     .getDialogSettings();

@@ -77,9 +77,9 @@ public final class JavaUtils {
 
     /**
      * Check if the method specified in the methodName and
-     * methodParameterTypeSignatures parameters is overridden in a subclass of
-     * the original declared class, and that subclass is a superclass of
-     * objectClass.
+     * methodParameterTypeSignatures parameters is overridden and concrete in a
+     * subclass of the original declared class, and that subclass is a
+     * superclass of objectClass.
      * 
      * @param objectClass
      * @param methodName
@@ -106,8 +106,12 @@ public final class JavaUtils {
 
             IMethod method = superclasses[i].getMethod(methodName,
                     methodParameterTypeSignatures);
-            if (method.exists())
-                return true;
+            if (method.exists()) {
+                if (Flags.isAbstract(method.getFlags()))
+                    return false;
+                else
+                    return true;
+            }
         }
 
         return false;
@@ -123,6 +127,18 @@ public final class JavaUtils {
             final IType objectClass) throws JavaModelException {
         return isOverriddenInSuperclass(objectClass, "hashCode", new String[0],
                 "java.lang.Object");
+    }
+
+    public static boolean isToStringConcreteInSuperclass(final IType objectClass)
+            throws JavaModelException {
+        return isOverriddenInSuperclass(objectClass, "toString", new String[0],
+                null);
+    }
+
+    public static boolean isCompareToImplementedInSuperclass(
+            final IType objectClass) throws JavaModelException {
+        return isOverriddenInSuperclass(objectClass, "compareTo",
+                new String[] { "QObject;" }, null);
     }
 
     public static boolean isImplementedInSupertype(final IType objectClass,

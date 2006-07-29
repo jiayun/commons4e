@@ -64,9 +64,9 @@ public final class CompareToGenerator implements ILangGenerator {
             OrderableFieldDialog dialog = new OrderableFieldDialog(parentShell,
                     "Generate CompareTo Method", objectClass, JavaUtils
                             .getNonStaticNonCacheFields(objectClass),
-                    excludedMethods, !JavaUtils
-                            .isImplementedInSupertype(objectClass,
-                                    "Comparable"));
+                    excludedMethods, !(JavaUtils.isImplementedInSupertype(
+                            objectClass, "Comparable") && JavaUtils
+                            .isHashCodeOverriddenInSuperclass(objectClass)));
             int returnCode = dialog.open();
             if (returnCode == Window.OK) {
 
