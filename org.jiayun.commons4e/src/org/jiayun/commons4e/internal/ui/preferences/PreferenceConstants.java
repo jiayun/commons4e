@@ -24,6 +24,8 @@ public class PreferenceConstants {
 
     public static final String GENERIFY_COMPARETO = "generifyCompareTo";
 
+    public static final String DISPLAY_FIELDS_OF_SUPERCLASSES = "displayFieldsOfSuperclasses";
+
     public static void initializeDefaultValues() {
         Preferences preferences = Commons4ePlugin.getDefault()
                 .getPluginPreferences();
@@ -33,5 +35,6 @@ public class PreferenceConstants {
         preferences.setDefault(TOSTRING_CACHING_FIELD, "toString");
         preferences.setDefault(ADD_OVERRIDE_ANNOTATION, true);
         preferences.setDefault(GENERIFY_COMPARETO, true);
+        preferences.setDefault(DISPLAY_FIELDS_OF_SUPERCLASSES, false);
     }
 }

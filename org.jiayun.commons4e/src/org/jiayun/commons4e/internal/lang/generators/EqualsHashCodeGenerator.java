@@ -76,14 +76,21 @@ public final class EqualsHashCodeGenerator implements ILangGenerator {
             excludedMethods.add(existingHashCode);
         }
         try {
+            IField[] fields;
+            if (PreferenceUtils.getDisplayFieldsOfSuperclasses()) {
+                fields = JavaUtils
+                        .getNonStaticNonCacheFieldsAndAccessibleNonStaticFieldsOfSuperclasses(objectClass);
+            } else {
+                fields = JavaUtils.getNonStaticNonCacheFields(objectClass);
+            }
+
             boolean disableAppendSuper = JavaUtils
                     .isDirectSubclassOfObject(objectClass)
                     || !JavaUtils.isEqualsOverriddenInSuperclass(objectClass)
                     || !JavaUtils.isHashCodeOverriddenInSuperclass(objectClass);
 
             EqualsHashCodeDialog dialog = new EqualsHashCodeDialog(parentShell,
-                    "Generate Equals and HashCode", objectClass, JavaUtils
-                            .getNonStaticNonCacheFields(objectClass),
+                    "Generate Equals and HashCode", objectClass, fields,
                     excludedMethods, disableAppendSuper);
             int returnCode = dialog.open();
             if (returnCode == Window.OK) {

@@ -78,9 +78,16 @@ public final class ToStringGenerator implements ILangGenerator {
             excludedMethods.add(existingMethod);
         }
         try {
+            IField[] fields;
+            if (PreferenceUtils.getDisplayFieldsOfSuperclasses()) {
+                fields = JavaUtils
+                        .getNonStaticNonCacheFieldsAndAccessibleNonStaticFieldsOfSuperclasses(objectClass);
+            } else {
+                fields = JavaUtils.getNonStaticNonCacheFields(objectClass);
+            }
+
             ToStringDialog dialog = new ToStringDialog(parentShell,
-                    "Generate ToString Method", objectClass, JavaUtils
-                            .getNonStaticNonCacheFields(objectClass),
+                    "Generate ToString Method", objectClass, fields,
                     excludedMethods, !JavaUtils
                             .isToStringConcreteInSuperclass(objectClass));
             int returnCode = dialog.open();

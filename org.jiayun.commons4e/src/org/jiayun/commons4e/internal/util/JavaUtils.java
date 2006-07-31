@@ -2,6 +2,7 @@
 package org.jiayun.commons4e.internal.util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -296,6 +297,41 @@ public final class JavaUtils {
                 result.add(fields[i]);
             }
         }
+
+        return (IField[]) result.toArray(new IField[result.size()]);
+    }
+
+    public static IField[] getNonStaticNonCacheFieldsAndAccessibleNonStaticFieldsOfSuperclasses(
+            final IType objectClass) throws JavaModelException {
+
+        List result = new ArrayList();
+
+        ITypeHierarchy typeHierarchy = objectClass.newSupertypeHierarchy(null);
+        IType[] superclasses = typeHierarchy.getAllSuperclasses(objectClass);
+
+        for (int i = 0; i < superclasses.length; i++) {
+            IField[] fields = superclasses[i].getFields();
+
+            boolean samePackage = objectClass.getPackageFragment()
+                    .getElementName().equals(
+                            superclasses[i].getPackageFragment()
+                                    .getElementName());
+
+            for (int j = 0; j < fields.length; j++) {
+
+                if (!samePackage && !Flags.isPublic(fields[j].getFlags())
+                        && !Flags.isProtected(fields[j].getFlags())) {
+                    continue;
+                }
+
+                if (!Flags.isPrivate(fields[j].getFlags())
+                        && !Flags.isStatic(fields[j].getFlags())) {
+                    result.add(fields[j]);
+                }
+            }
+        }
+
+        result.addAll(Arrays.asList(getNonStaticNonCacheFields(objectClass)));
 
         return (IField[]) result.toArray(new IField[result.size()]);
     }

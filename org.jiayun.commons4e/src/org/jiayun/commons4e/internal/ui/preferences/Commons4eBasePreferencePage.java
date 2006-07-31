@@ -30,6 +30,8 @@ public class Commons4eBasePreferencePage extends FieldEditorPreferencePage
 
     private BooleanFieldEditor generifyCompareTo;
 
+    private BooleanFieldEditor displayFieldsOfSuperclasses;
+
     public Commons4eBasePreferencePage() {
         super(FieldEditorPreferencePage.GRID);
         setPreferenceStore(Commons4ePlugin.getDefault().getPreferenceStore());
@@ -76,6 +78,11 @@ public class Commons4eBasePreferencePage extends FieldEditorPreferencePage
                 "&Generify compareTo when the source compatibility is 5.0 or above",
                 getFieldEditorParent());
         addField(generifyCompareTo);
+
+        displayFieldsOfSuperclasses = new BooleanFieldEditor(
+                PreferenceConstants.DISPLAY_FIELDS_OF_SUPERCLASSES,
+                "&Display fields of superclasses", getFieldEditorParent());
+        addField(displayFieldsOfSuperclasses);
     }
 
     protected void checkState() {

@@ -44,6 +44,11 @@ public final class PreferenceUtils {
                 PreferenceConstants.GENERIFY_COMPARETO);
     }
 
+    public static boolean getDisplayFieldsOfSuperclasses() {
+        return Commons4ePlugin.getDefault().getPluginPreferences().getBoolean(
+                PreferenceConstants.DISPLAY_FIELDS_OF_SUPERCLASSES);
+    }
+
     public static boolean isSourceLevelGreaterThanOrEqualTo5(
             IJavaProject project) {
         float sc = Float.parseFloat(project.getOption(JavaCore.COMPILER_SOURCE,
