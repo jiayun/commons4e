@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<site>
-   <description url="http://bguerin.github.com/commons4e">
+<site
+      mirrorsURL="http://www.jiayun.org/commons4e/mirrors.xml">
+   <description url="http://commons4e.berlios.de/updatesite31">
       Commons4E Update Site
    </description>
    <feature url="features/org.jiayun.commons4e_1.1.11.jar" id="org.jiayun.commons4e" version="1.1.11">
