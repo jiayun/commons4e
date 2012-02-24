@@ -6,8 +6,9 @@
       provider-name="JiaYun">
    <install-handler/>
 
-   <description url="http://commons4e.berlios.de/">
-      Commons4E is an Eclipse plug-in for making using the Java components from Jakarta Commons more convenient.
+   <description url="http://bguerin.github.com/commons4e">
+      Commons4E is an Eclipse plug-in for making using the Java components
+from Jakarta Commons more convenient.
    </description>
 
    <copyright>
@@ -104,7 +105,8 @@ This Agreement is governed by the laws of the State of New York and the intellec
    </license>
 
    <url>
-      <update label="Commons4E" url="http://commons4e.berlios.de/updatesite31"/>
+      <update label="Commons4E" url="http://bguerin.github.com/commons4e"/>
+      <discovery label="Commons4E original site" url="http://commons4e.berlios.de"/>
    </url>
 
    <requires>
