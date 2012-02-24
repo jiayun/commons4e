@@ -36,6 +36,7 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.jiayun.commons4e.Commons4ePlugin;
 import org.jiayun.commons4e.internal.util.JavaUtils;
+import org.jiayun.commons4e.internal.util.PreferenceUtils;
 
 /*
  * This class contains some code from
@@ -70,6 +71,8 @@ public class FieldDialog extends Dialog {
 
     private boolean generateComment;
 
+    private boolean useGettersInsteadOfFields;
+
     private IDialogSettings settings;
 
     private static final String SETTINGS_SECTION = "FieldDialog";
@@ -79,6 +82,8 @@ public class FieldDialog extends Dialog {
     private static final String SETTINGS_APPEND_SUPER = "AppendSuper";
 
     private static final String SETTINGS_GENERATE_COMMENT = "GenerateComment";
+
+    private static final String SETTINGS_USE_GETTERS = "UseGetters";
 
     public FieldDialog(final Shell parentShell, final String dialogTitle,
             final IType objectClass, final IField[] fields,
@@ -126,6 +131,7 @@ public class FieldDialog extends Dialog {
             appendSuper = settings.getBoolean(SETTINGS_APPEND_SUPER);
         }
         generateComment = settings.getBoolean(SETTINGS_GENERATE_COMMENT);
+        useGettersInsteadOfFields = settings.getBoolean(SETTINGS_USE_GETTERS);
 
         insertPositions = new ArrayList();
         insertPositionLabels = new ArrayList();
@@ -199,6 +205,7 @@ public class FieldDialog extends Dialog {
             settings.put(SETTINGS_APPEND_SUPER, appendSuper);
         }
         settings.put(SETTINGS_GENERATE_COMMENT, generateComment);
+        settings.put(SETTINGS_USE_GETTERS, useGettersInsteadOfFields);
 
         return super.close();
     }
@@ -252,6 +259,11 @@ public class FieldDialog extends Dialog {
         data = new GridData(GridData.FILL_HORIZONTAL);
         data.horizontalSpan = 2;
         commentComposite.setLayoutData(data);
+
+        Composite gettersComposite = createGettersSelection(composite);
+        data = new GridData(GridData.FILL_HORIZONTAL);
+        data.horizontalSpan = 2;
+        gettersComposite.setLayoutData(data);
 
         messageLabel = new CLabel(composite, SWT.NONE);
         data = new GridData(GridData.FILL_HORIZONTAL);
@@ -423,6 +435,34 @@ public class FieldDialog extends Dialog {
         return commentComposite;
     }
 
+    protected Composite createGettersSelection(final Composite composite) {
+        Composite gettersComposite = new Composite(composite, SWT.NONE);
+        GridLayout layout = new GridLayout();
+        layout.marginHeight = 0;
+        layout.marginWidth = 0;
+        gettersComposite.setLayout(layout);
+
+        Button gettersButton = new Button(gettersComposite, SWT.CHECK);
+        gettersButton.setText("Use &getters instead of fields");
+        gettersButton
+                .setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
+
+        gettersButton.addSelectionListener(new SelectionListener() {
+
+            public void widgetSelected(SelectionEvent e) {
+                useGettersInsteadOfFields = (((Button) e.widget).getSelection());
+            }
+
+            public void widgetDefaultSelected(SelectionEvent e) {
+                widgetSelected(e);
+            }
+        });
+        useGettersInsteadOfFields = PreferenceUtils.getUseGettersInsteadOfFields();
+        gettersButton.setSelection(useGettersInsteadOfFields);
+
+        return gettersComposite;
+    }
+
     public IField[] getCheckedFields() {
         return checkedFields;
     }
@@ -440,5 +480,9 @@ public class FieldDialog extends Dialog {
 
     public boolean getGenerateComment() {
         return generateComment;
+    }
+
+    public boolean getUseGettersInsteadOfFields() {
+        return useGettersInsteadOfFields;
     }
 }

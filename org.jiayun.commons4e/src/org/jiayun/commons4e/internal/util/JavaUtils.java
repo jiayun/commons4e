@@ -336,6 +336,27 @@ public final class JavaUtils {
         return (IField[]) result.toArray(new IField[result.size()]);
     }
 
+    public static String generateFieldAccessor(final IField field, final boolean useGettersInsteadOfFields)
+            throws JavaModelException {
+        if (useGettersInsteadOfFields) {
+            return generateGetter(field);
+        } else {
+            return field.getElementName();
+        }
+    }
+
+    public static String generateGetter(final IField field) throws JavaModelException {
+        if (JavaUtils.isFieldABoolean(field)) {
+            return "is" + JavaUtils.UCFirst(field.getElementName() + "()");
+        } else {
+            return "get" + JavaUtils.UCFirst(field.getElementName() + "()");
+        }
+    }
+
+    public static boolean isFieldABoolean(final IField field) throws JavaModelException {
+        return Signature.SIG_BOOLEAN.equals(field.getTypeSignature());
+    }
+
     public static String getMethodLabel(final IMethod method) {
         StringBuffer result = new StringBuffer("`");
 
@@ -477,5 +498,11 @@ public final class JavaUtils {
             formattedContent = source;
         }
         return formattedContent;
+    }
+
+    public static String UCFirst(final String string) {
+        String firstChar = string.substring(0, 1);
+        String remain = string.substring(1);
+        return firstChar.toUpperCase()+remain;
     }
 }

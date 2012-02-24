@@ -26,6 +26,8 @@ public class PreferenceConstants {
 
     public static final String DISPLAY_FIELDS_OF_SUPERCLASSES = "displayFieldsOfSuperclasses";
 
+    public static final String USE_GETTERS_INSTEAD_OF_FIELDS = "useGettersInsteadOfFields";
+
     public static void initializeDefaultValues() {
         Preferences preferences = Commons4ePlugin.getDefault()
                 .getPluginPreferences();
@@ -36,5 +38,6 @@ public class PreferenceConstants {
         preferences.setDefault(ADD_OVERRIDE_ANNOTATION, true);
         preferences.setDefault(GENERIFY_COMPARETO, true);
         preferences.setDefault(DISPLAY_FIELDS_OF_SUPERCLASSES, false);
+        preferences.setDefault(USE_GETTERS_INSTEAD_OF_FIELDS, false);
     }
 }

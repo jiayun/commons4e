@@ -101,10 +101,11 @@ public final class ToStringGenerator implements ILangGenerator {
                 IJavaElement insertPosition = dialog.getElementPosition();
                 boolean appendSuper = dialog.getAppendSuper();
                 boolean generateComment = dialog.getGenerateComment();
+                boolean useGettersInsteadOfFields = dialog.getUseGettersInsteadOfFields();
                 String style = dialog.getToStringStyle();
 
                 generateToString(parentShell, objectClass, checkedFields,
-                        insertPosition, appendSuper, generateComment, style);
+                        insertPosition, appendSuper, generateComment, style, useGettersInsteadOfFields);
             }
 
         } catch (CoreException e) {
@@ -117,7 +118,8 @@ public final class ToStringGenerator implements ILangGenerator {
     private void generateToString(final Shell parentShell,
             final IType objectClass, final IField[] checkedFields,
             final IJavaElement insertPosition, final boolean appendSuper,
-            final boolean generateComment, final String style)
+            final boolean generateComment, final String style,
+            final boolean useGettersInsteadOfFields)
             throws PartInitException, JavaModelException {
 
         ICompilationUnit cu = objectClass.getCompilationUnit();
@@ -133,7 +135,8 @@ public final class ToStringGenerator implements ILangGenerator {
 
         String styleConstant = getStyleConstantAndAddImport(style, objectClass);
         String source = createMethod(objectClass, checkedFields, appendSuper,
-                generateComment, styleConstant, isCacheable, addOverride);
+                generateComment, styleConstant, isCacheable, addOverride,
+                useGettersInsteadOfFields);
 
         String formattedContent = JavaUtils.formatCode(parentShell,
                 objectClass, source);
@@ -191,7 +194,9 @@ public final class ToStringGenerator implements ILangGenerator {
     private String createMethod(final IType objectClass,
             final IField[] checkedFields, final boolean appendSuper,
             final boolean generateComment, final String styleConstant,
-            final boolean isCacheable, final boolean addOverride) {
+            final boolean isCacheable, final boolean addOverride,
+            final boolean useGettersInsteadOfFields)
+                    throws JavaModelException {
 
         StringBuffer content = new StringBuffer();
         if (generateComment) {
@@ -208,14 +213,14 @@ public final class ToStringGenerator implements ILangGenerator {
             content.append("if (" + cachingField + "== null) {\n");
             content.append(cachingField + " = ");
             content.append(createBuilderString(checkedFields, appendSuper,
-                    styleConstant));
+                    styleConstant, useGettersInsteadOfFields));
             content.append("}\n");
             content.append("return " + cachingField + ";\n");
 
         } else {
             content.append("return ");
             content.append(createBuilderString(checkedFields, appendSuper,
-                    styleConstant));
+                    styleConstant, useGettersInsteadOfFields));
         }
         content.append("}\n\n");
 
@@ -223,7 +228,9 @@ public final class ToStringGenerator implements ILangGenerator {
     }
 
     private String createBuilderString(final IField[] checkedFields,
-            final boolean appendSuper, final String styleConstant) {
+            final boolean appendSuper, final String styleConstant,
+            final boolean useGettersInsteadOfFields)
+                    throws JavaModelException {
         StringBuffer content = new StringBuffer();
         if (styleConstant == null) {
             content.append("new ToStringBuilder(this)");
@@ -239,7 +246,7 @@ public final class ToStringGenerator implements ILangGenerator {
             content.append(".append(\"");
             content.append(checkedFields[i].getElementName());
             content.append("\", ");
-            content.append(checkedFields[i].getElementName());
+            content.append(JavaUtils.generateFieldAccessor(checkedFields[i], useGettersInsteadOfFields));
             content.append(")");
         }
         content.append(".toString();\n");

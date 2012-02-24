@@ -32,6 +32,8 @@ public class Commons4eBasePreferencePage extends FieldEditorPreferencePage
 
     private BooleanFieldEditor displayFieldsOfSuperclasses;
 
+    private BooleanFieldEditor useGettersInsteadOfFields;
+
     public Commons4eBasePreferencePage() {
         super(FieldEditorPreferencePage.GRID);
         setPreferenceStore(Commons4ePlugin.getDefault().getPreferenceStore());
@@ -83,6 +85,11 @@ public class Commons4eBasePreferencePage extends FieldEditorPreferencePage
                 PreferenceConstants.DISPLAY_FIELDS_OF_SUPERCLASSES,
                 "&Display fields of superclasses", getFieldEditorParent());
         addField(displayFieldsOfSuperclasses);
+
+        useGettersInsteadOfFields = new BooleanFieldEditor(
+                PreferenceConstants.USE_GETTERS_INSTEAD_OF_FIELDS,
+                "&Use getters instead of fields (for Hibernate)", getFieldEditorParent());
+        addField(useGettersInsteadOfFields);
     }
 
     protected void checkState() {

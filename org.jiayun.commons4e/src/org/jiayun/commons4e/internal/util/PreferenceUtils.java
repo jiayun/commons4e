@@ -49,6 +49,11 @@ public final class PreferenceUtils {
                 PreferenceConstants.DISPLAY_FIELDS_OF_SUPERCLASSES);
     }
 
+    public static boolean getUseGettersInsteadOfFields() {
+        return Commons4ePlugin.getDefault().getPluginPreferences().getBoolean(
+                PreferenceConstants.USE_GETTERS_INSTEAD_OF_FIELDS);
+    }
+
     public static boolean isSourceLevelGreaterThanOrEqualTo5(
             IJavaProject project) {
         float sc = Float.parseFloat(project.getOption(JavaCore.COMPILER_SOURCE,
