@@ -176,16 +176,39 @@ public final class EqualsHashCodeGenerator implements ILangGenerator {
             content.append("@Override\n");
         }
         content.append("public boolean equals(final Object other) {\n");
+        content.append("if (other == null) return false;\n");
         if (compareReferences) {
             content.append("if (this == other) return true;");
         }
-        content.append("if ( !(other instanceof ");
-        content.append(objectClass.getElementName());
-        content.append(") ) return false;\n");
-        content.append(objectClass.getElementName());
-        content.append(" castOther = (");
-        content.append(objectClass.getElementName());
-        content.append(") other;\n");
+        // by definition a.equals(b) == b.equals(a) (symmetric), using instanceOf can't assure this
+        // example: 
+		// class A {
+		//     int field1;
+		//     public A(int x) { field1 = x };
+		// }
+		// class B extends A {
+		//     int field2;
+		//     public A(int x, int y) { super(x); field2 = y };
+		// }
+        // ...
+		// A a = new A(1)
+		// B b = new B(1, 2);
+		// a.equals(b); // true
+		// b.equals(a); // false
+        //
+        // from jdk javadoc for equals:
+        // (equals) It is symmetric: for any non-null reference values x and y, x.equals(y) should return true if and only if y.equals(x) returns true. 
+
+//        content.append("if ( !(other instanceof ");
+//        content.append(objectClass.getElementName());
+//        content.append(") ) return false;\n");
+        content.append("if (!(other.getClass() == this.getClass())) return false;\n");
+
+		content.append(objectClass.getElementName());
+		content.append(" castOther = (");
+		content.append(objectClass.getElementName());
+		content.append(") other;\n");
+
         content.append("return new EqualsBuilder()");
         if (appendSuper) {
             content.append(".appendSuper(super.equals(other))");
