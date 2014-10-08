@@ -18,6 +18,8 @@ import org.jiayun.commons4e.Commons4ePlugin;
 public class Commons4eBasePreferencePage extends FieldEditorPreferencePage
         implements IWorkbenchPreferencePage {
 
+    private BooleanFieldEditor useCommonsLang3;
+    
     private BooleanFieldEditor cacheHashCode;
 
     private StringFieldEditor hashCodeField;
@@ -33,6 +35,8 @@ public class Commons4eBasePreferencePage extends FieldEditorPreferencePage
     private BooleanFieldEditor displayFieldsOfSuperclasses;
 
     private BooleanFieldEditor useGettersInsteadOfFields;
+    
+    private BooleanFieldEditor useBlocksInIfStatements;
 
     public Commons4eBasePreferencePage() {
         super(FieldEditorPreferencePage.GRID);
@@ -45,6 +49,12 @@ public class Commons4eBasePreferencePage extends FieldEditorPreferencePage
      * @see org.eclipse.jface.preference.FieldEditorPreferencePage#createFieldEditors()
      */
     protected void createFieldEditors() {
+        useCommonsLang3 = new BooleanFieldEditor(
+                PreferenceConstants.USE_COMMONS_LANG3,
+                "&Import commons-lang3 for all code generation",
+                getFieldEditorParent());
+        addField(useCommonsLang3);
+        
         cacheHashCode = new BooleanFieldEditor(
                 PreferenceConstants.CACHE_HASHCODE,
                 "Cache &hashCode when all selected fields are final",
@@ -90,6 +100,11 @@ public class Commons4eBasePreferencePage extends FieldEditorPreferencePage
                 PreferenceConstants.USE_GETTERS_INSTEAD_OF_FIELDS,
                 "&Use getters instead of fields (for Hibernate)", getFieldEditorParent());
         addField(useGettersInsteadOfFields);
+        
+        useBlocksInIfStatements = new BooleanFieldEditor(
+                PreferenceConstants.USE_BLOCKS_IN_IF_STATEMENTS,
+                "&Use blocks in 'if' statments", getFieldEditorParent());
+        addField(useBlocksInIfStatements);
     }
 
     protected void checkState() {
