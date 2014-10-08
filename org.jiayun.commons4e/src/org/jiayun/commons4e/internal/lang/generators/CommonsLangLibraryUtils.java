@@ -1,7 +1,3 @@
-/**
- * Copyright (c) 2014 European Organisation for Nuclear Research (CERN), All Rights Reserved.
- */
-
 package org.jiayun.commons4e.internal.lang.generators;
 
 import org.jiayun.commons4e.internal.util.PreferenceUtils;
