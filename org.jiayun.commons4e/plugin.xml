@@ -2,58 +2,19 @@
 <?eclipse version="3.0"?>
 <plugin>
 
-   <extension
-         point="org.eclipse.ui.popupMenus">
-      <objectContribution
-            objectClass="org.eclipse.jdt.core.IType"
-            id="org.jiayun.commons4e.lang.LangActions">
-         <menu
-               label="Commons4E Lang"
-               path="additions"
-               id="langMenu">
-            <separator name="langGroup"/>
-         </menu>
-         <action
-               label="Generate CompareTo Method..."
-               class="org.jiayun.commons4e.internal.lang.actions.GenerateAction"
-               menubarPath="langMenu/langGroup"
-               id="org.jiayun.commons4e.lang.actions.GenerateCompareToAction"/>
-         <action
-               label="Generate ToString Method..."
-               class="org.jiayun.commons4e.internal.lang.actions.GenerateAction"
-               menubarPath="langMenu/langGroup"
-               id="org.jiayun.commons4e.lang.actions.GenerateToStringAction"/>
-         <action
-               label="Generate Equals and HashCode..."
-               class="org.jiayun.commons4e.internal.lang.actions.GenerateAction"
-               menubarPath="langMenu/langGroup"
-               id="org.jiayun.commons4e.lang.actions.GenerateEqualsHashCodeAction"/>
-      </objectContribution>
-      <viewerContribution
-            targetID="#CompilationUnitEditorContext"
-            id="org.jiayun.commons4e.lang.LangActions">
-         <menu
-               label="Commons4E Lang"
-               path="additions"
-               id="langMenu">
-            <separator name="langGroup"/>
-         </menu>
-         <action
-               label="Generate CompareTo Method..."
-               class="org.jiayun.commons4e.internal.lang.actions.ViewerContributionGenerateAction"
-               menubarPath="langMenu/langGroup"
-               id="org.jiayun.commons4e.lang.actions.GenerateCompareToAction"/>
-         <action
-               label="Generate ToString Method..."
-               class="org.jiayun.commons4e.internal.lang.actions.ViewerContributionGenerateAction"
-               menubarPath="langMenu/langGroup"
-               id="org.jiayun.commons4e.lang.actions.GenerateToStringAction"/>
-         <action
-               label="Generate Equals and HashCode..."
-               class="org.jiayun.commons4e.internal.lang.actions.ViewerContributionGenerateAction"
-               menubarPath="langMenu/langGroup"
-               id="org.jiayun.commons4e.lang.actions.GenerateEqualsHashCodeAction"/>
-      </viewerContribution>
+   <extension point="org.eclipse.ui.commands">
+		<command
+        categoryId="org.eclipse.jdt.ui.category.source"
+        id="org.jiayun.commons4e.lang.actions.GenerateEqualsHashCodeAction"
+        name="Generate Equals and HashCode..."/>
+		<command
+        categoryId="org.eclipse.jdt.ui.category.source"
+        id="org.jiayun.commons4e.lang.actions.GenerateToStringAction"
+        name="Generate ToString Method..."/>
+		<command
+        categoryId="org.eclipse.jdt.ui.category.source"
+        id="org.jiayun.commons4e.lang.actions.GenerateCompareToAction"
+        name="Generate CompareTo Method..."/>
    </extension>
    <extension
          point="org.eclipse.ui.preferencePages">
@@ -67,5 +28,100 @@
          point="org.eclipse.core.runtime.preferences">
       <initializer class="org.jiayun.commons4e.Commons4ePreferenceInitializer"/>
    </extension>
-
+	<extension point="org.eclipse.ui.bindings">
+		<key
+        commandId="org.jiayun.commons4e.lang.actions.GenerateEqualsHashCodeAction"
+        contextId="org.eclipse.jdt.ui.javaEditorScope"
+        schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+        sequence="Ctrl+Shift+H"/>
+  <key
+        commandId="org.jiayun.commons4e.lang.actions.GenerateToStringAction"
+        contextId="org.eclipse.jdt.ui.javaEditorScope"
+        schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+        sequence="Ctrl+Shift+S">
+  </key>
+  <key
+        commandId="org.jiayun.commons4e.lang.actions.GenerateCompareToAction"
+        contextId="org.eclipse.jdt.ui.javaEditorScope"
+        schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+        sequence="Ctrl+Shift+T">
+  </key>
+	</extension>
+ <extension
+       point="org.eclipse.ui.handlers">
+    <handler
+          class="org.jiayun.commons4e.internal.lang.handlers.GenerateHandler"
+          commandId="org.jiayun.commons4e.lang.actions.GenerateEqualsHashCodeAction">
+       <activeWhen>
+          <reference
+                definitionId="org.jiayun.commons4e.lang.contribution.inEditor">
+          </reference></activeWhen>
+    </handler>
+    <handler
+          class="org.jiayun.commons4e.internal.lang.handlers.GenerateHandler"
+          commandId="org.jiayun.commons4e.lang.actions.GenerateToStringAction">
+       <activeWhen>
+          <reference
+                definitionId="org.jiayun.commons4e.lang.contribution.inEditor">
+          </reference>
+       </activeWhen>
+    </handler>
+    <handler
+          class="org.jiayun.commons4e.internal.lang.handlers.GenerateHandler"
+          commandId="org.jiayun.commons4e.lang.actions.GenerateCompareToAction">
+       <activeWhen>
+          <reference
+                definitionId="org.jiayun.commons4e.lang.contribution.inEditor">
+          </reference>
+       </activeWhen>
+    </handler>
+ </extension>
+ <extension
+       point="org.eclipse.ui.menus">
+    <menuContribution
+          allPopups="false"
+          locationURI="popup:org.eclipse.ui.popup.any?before=additions">
+       <menu
+             id="langMenu"
+             label="Commons4E Lang">
+          <command
+                commandId="org.jiayun.commons4e.lang.actions.GenerateEqualsHashCodeAction"
+                label="Generate Equals and HashCode..."
+                style="push">
+          </command>
+          <command
+                commandId="org.jiayun.commons4e.lang.actions.GenerateToStringAction"
+                label="Generate ToString Method..."
+                style="push">
+          </command>
+          <command
+                commandId="org.jiayun.commons4e.lang.actions.GenerateCompareToAction"
+                label="Generate CompareTo Method..."
+                style="push">
+          </command>
+          <visibleWhen
+                checkEnabled="false">
+             <reference
+                   definitionId="org.jiayun.commons4e.lang.contribution.inEditor">
+             </reference>
+          </visibleWhen>
+       </menu>
+    </menuContribution>
+ </extension>
+ <extension point="org.eclipse.core.expressions.definitions">
+    <definition id="org.jiayun.commons4e.lang.contribution.inEditor">
+		<and>
+	      <with variable="activeEditorId">
+	           <equals
+	                 value="org.eclipse.jdt.ui.CompilationUnitEditor">
+	           </equals>
+	      </with>
+	      <with variable="activePartId">
+		     <equals
+		           value="org.eclipse.jdt.ui.CompilationUnitEditor">
+		     </equals>
+	      </with>
+        </and>
+    </definition>
+</extension>
 </plugin>
