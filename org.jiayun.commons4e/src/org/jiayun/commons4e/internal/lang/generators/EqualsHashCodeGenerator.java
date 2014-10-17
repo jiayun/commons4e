@@ -12,7 +12,6 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -109,6 +108,7 @@ public final class EqualsHashCodeGenerator implements ILangGenerator {
                 boolean generateComment = dialog.getGenerateComment();
                 boolean compareReferences = dialog.getCompareReferences();
                 boolean useGettersInsteadOfFields = dialog.getUseGettersInsteadOfFields();
+                boolean useBlocksInIfStatements = dialog.getUseBlockInIfStatements();
                 IInitMultNumbers imNumbers = dialog.getInitMultNumbers();
 
                 IJavaElement created = generateHashCode(parentShell,
@@ -118,7 +118,8 @@ public final class EqualsHashCodeGenerator implements ILangGenerator {
 
                 created = generateEquals(parentShell, objectClass,
                         checkedFields, created, appendSuper, generateComment,
-                        compareReferences, useGettersInsteadOfFields);
+                        compareReferences, useGettersInsteadOfFields,
+                        useBlocksInIfStatements);
 
                 ICompilationUnit cu = objectClass.getCompilationUnit();
                 IEditorPart javaEditor = JavaUI.openInEditor(cu);
@@ -136,8 +137,9 @@ public final class EqualsHashCodeGenerator implements ILangGenerator {
             final IType objectClass, final IField[] checkedFields,
             final IJavaElement insertPosition, final boolean appendSuper,
             final boolean generateComment, final boolean compareReferences,
-            final boolean useGettersInsteadOfFields)
-            throws PartInitException, JavaModelException {
+            final boolean useGettersInsteadOfFields,
+            final boolean useBlocksInIfStatements)
+                    throws PartInitException, JavaModelException {
 
         boolean addOverride = PreferenceUtils.getAddOverride()
                 && PreferenceUtils
@@ -146,13 +148,13 @@ public final class EqualsHashCodeGenerator implements ILangGenerator {
 
         String source = createEqualsMethod(objectClass, checkedFields,
                 appendSuper, generateComment, compareReferences, addOverride,
-                useGettersInsteadOfFields);
+                useGettersInsteadOfFields, useBlocksInIfStatements);
 
         String formattedContent = JavaUtils.formatCode(parentShell,
                 objectClass, source);
 
         objectClass.getCompilationUnit().createImport(
-                "org.apache.commons.lang.builder.EqualsBuilder", null, null);
+                CommonsLangLibraryUtils.getEqualsBuilderLibrary(), null, null);
         IJavaElement created = objectClass.createMethod(formattedContent,
                 insertPosition, true, null);
 
@@ -162,8 +164,8 @@ public final class EqualsHashCodeGenerator implements ILangGenerator {
     private String createEqualsMethod(final IType objectClass,
             final IField[] checkedFields, final boolean appendSuper,
             final boolean generateComment, final boolean compareReferences,
-            final boolean addOverride, final boolean useGettersInsteadOfFields)
-                    throws JavaModelException {
+            final boolean addOverride, final boolean useGettersInsteadOfFields,
+            final boolean useBlocksInIfStatements) throws JavaModelException {
 
         StringBuffer content = new StringBuffer();
         if (generateComment) {
@@ -177,11 +179,17 @@ public final class EqualsHashCodeGenerator implements ILangGenerator {
         }
         content.append("public boolean equals(final Object other) {\n");
         if (compareReferences) {
-            content.append("if (this == other) return true;");
+            content.append("if (this == other)");
+            content.append(useBlocksInIfStatements ? "{\n" : "");
+            content.append(" return true;");
+            content.append(useBlocksInIfStatements ? "\n}\n" : "");
         }
         content.append("if ( !(other instanceof ");
         content.append(objectClass.getElementName());
-        content.append(") ) return false;\n");
+        content.append(") )");
+        content.append(useBlocksInIfStatements ? "{\n" : "");
+        content.append(" return false;");
+        content.append(useBlocksInIfStatements ? "\n}\n" : "");
         content.append(objectClass.getElementName());
         content.append(" castOther = (");
         content.append(objectClass.getElementName());
@@ -226,7 +234,7 @@ public final class EqualsHashCodeGenerator implements ILangGenerator {
                 objectClass, source);
 
         objectClass.getCompilationUnit().createImport(
-                "org.apache.commons.lang.builder.HashCodeBuilder", null, null);
+                CommonsLangLibraryUtils.getHashCodeBuilderLibrary(), null, null);
         IJavaElement created = objectClass.createMethod(formattedContent,
                 insertPosition, true, null);
 

@@ -72,6 +72,8 @@ public class FieldDialog extends Dialog {
     private boolean generateComment;
 
     private boolean useGettersInsteadOfFields;
+    
+    private boolean useBlockInIfStatements;
 
     private IDialogSettings settings;
 
@@ -264,6 +266,11 @@ public class FieldDialog extends Dialog {
         data = new GridData(GridData.FILL_HORIZONTAL);
         data.horizontalSpan = 2;
         gettersComposite.setLayoutData(data);
+        
+        Composite blocksInIfComposite = createBlocksInIfSelection(composite);
+        data = new GridData(GridData.FILL_HORIZONTAL);
+        data.horizontalSpan = 2;
+        blocksInIfComposite.setLayoutData(data);
 
         messageLabel = new CLabel(composite, SWT.NONE);
         data = new GridData(GridData.FILL_HORIZONTAL);
@@ -462,6 +469,35 @@ public class FieldDialog extends Dialog {
 
         return gettersComposite;
     }
+    
+    protected Composite createBlocksInIfSelection(final Composite composite) {
+        Composite blocksInIfComposite = new Composite(composite, SWT.NONE);
+        GridLayout layout = new GridLayout();
+        layout.marginHeight = 0;
+        layout.marginWidth = 0;
+        blocksInIfComposite.setLayout(layout);
+
+        Button blocksInIfButton = new Button(blocksInIfComposite, SWT.CHECK);
+        blocksInIfButton.setText("&Use blocks in 'if' statments");
+        blocksInIfButton
+                .setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
+
+        blocksInIfButton.addSelectionListener(new SelectionListener() {
+
+            public void widgetSelected(SelectionEvent e) {
+                useBlockInIfStatements = (((Button) e.widget).getSelection());
+            }
+
+            public void widgetDefaultSelected(SelectionEvent e) {
+                widgetSelected(e);
+            }
+        });
+        useBlockInIfStatements = PreferenceUtils.getUseBlocksInIfStatements();
+        blocksInIfButton.setSelection(useBlockInIfStatements);
+        
+        return blocksInIfComposite;
+    }
+    
 
     public IField[] getCheckedFields() {
         return checkedFields;
@@ -484,5 +520,9 @@ public class FieldDialog extends Dialog {
 
     public boolean getUseGettersInsteadOfFields() {
         return useGettersInsteadOfFields;
+    }
+
+    public boolean getUseBlockInIfStatements() {
+        return useBlockInIfStatements;
     }
 }

@@ -139,7 +139,7 @@ public final class CompareToGenerator implements ILangGenerator {
                 objectClass, source);
 
         objectClass.getCompilationUnit().createImport(
-                "org.apache.commons.lang.builder.CompareToBuilder", null, null);
+                CommonsLangLibraryUtils.getCompareToBuilderLibrary(), null, null);
         IMethod created = objectClass.createMethod(formattedContent,
                 insertPosition, true, null);
 

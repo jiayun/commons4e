@@ -33,27 +33,6 @@ import org.jiayun.commons4e.internal.util.PreferenceUtils;
  */
 public final class ToStringGenerator implements ILangGenerator {
 
-    private static final String STYLE_PREFIX = "org.apache.commons.lang.builder.ToStringStyle";
-
-    private static final String DEFAULT_STYLE = STYLE_PREFIX + "."
-            + "DEFAULT_STYLE";
-
-    private static final String MULTI_LINE_STYLE = STYLE_PREFIX + "."
-            + "MULTI_LINE_STYLE";
-
-    private static final String NO_FIELD_NAMES_STYLE = STYLE_PREFIX + "."
-            + "NO_FIELD_NAMES_STYLE";
-
-    private static final String SHORT_PREFIX_STYLE = STYLE_PREFIX + "."
-            + "SHORT_PREFIX_STYLE";
-
-    private static final String SIMPLE_STYLE = STYLE_PREFIX + "."
-            + "SIMPLE_STYLE";
-
-    private static final String[] STYLES = new String[] { DEFAULT_STYLE,
-            MULTI_LINE_STYLE, NO_FIELD_NAMES_STYLE, SHORT_PREFIX_STYLE,
-            SIMPLE_STYLE };
-
     private static final ILangGenerator instance = new ToStringGenerator();
 
     private ToStringGenerator() {
@@ -142,7 +121,7 @@ public final class ToStringGenerator implements ILangGenerator {
                 objectClass, source);
 
         objectClass.getCompilationUnit().createImport(
-                "org.apache.commons.lang.builder.ToStringBuilder", null, null);
+                CommonsLangLibraryUtils.getToStringBuilderLibrary(), null, null);
         IMethod created = objectClass.createMethod(formattedContent,
                 insertPosition, true, null);
 
@@ -166,7 +145,9 @@ public final class ToStringGenerator implements ILangGenerator {
             final IType objectClass) throws JavaModelException {
 
         String styleConstant = null;
-        if (!style.equals(DEFAULT_STYLE) && !style.equals("")) {
+        if (!style.equals(
+                CommonsLangLibraryUtils.getToStringStyleLibraryDefaultStyle()) && 
+                !style.equals("")) {
 
             int lastDot = style.lastIndexOf('.');
             if (lastDot != -1 && lastDot != (style.length() - 1)) {
@@ -282,8 +263,14 @@ public final class ToStringGenerator implements ILangGenerator {
             }
 
             toStringStyle = settings.get(SETTINGS_STYLE);
-            toStringStyle = toStringStyle == null ? DEFAULT_STYLE
-                    : toStringStyle;
+            if(toStringStyle == null) {
+                toStringStyle = CommonsLangLibraryUtils.getToStringStyleLibraryDefaultStyle();
+            }else {
+                String[] splittedToStringStyle = toStringStyle.split("\\.");
+                String chosenStyle = splittedToStringStyle[splittedToStringStyle.length-1];
+                toStringStyle = CommonsLangLibraryUtils.getToStringStyleLibrary() + 
+                        CommonsLangLibraryUtils.DOT_STRING + chosenStyle;
+            }
         }
 
         /*
@@ -316,7 +303,7 @@ public final class ToStringGenerator implements ILangGenerator {
             label.setLayoutData(data);
 
             styleCombo = new Combo(composite, SWT.NONE);
-            styleCombo.setItems(STYLES);
+            styleCombo.setItems(CommonsLangLibraryUtils.createToStringStyles());
             styleCombo.setText(toStringStyle);
 
             data = new GridData(GridData.FILL_HORIZONTAL);
