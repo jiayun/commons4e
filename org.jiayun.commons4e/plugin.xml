@@ -15,6 +15,11 @@
         categoryId="org.eclipse.jdt.ui.category.source"
         id="org.jiayun.commons4e.lang.actions.GenerateCompareToAction"
         name="Generate CompareTo Method..."/>
+  <command
+        categoryId="org.eclipse.jdt.ui.category.source"
+        id="org.jiayun.commons4e.lang.actions.Commons4ELangMenu"
+        name="Commons4E Lang">
+  </command>
    </extension>
    <extension
          point="org.eclipse.ui.preferencePages">
@@ -33,18 +38,24 @@
         commandId="org.jiayun.commons4e.lang.actions.GenerateEqualsHashCodeAction"
         contextId="org.eclipse.jdt.ui.javaEditorScope"
         schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-        sequence="Ctrl+Shift+H"/>
+        sequence="Shift+Alt+G H"/>
   <key
         commandId="org.jiayun.commons4e.lang.actions.GenerateToStringAction"
         contextId="org.eclipse.jdt.ui.javaEditorScope"
         schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-        sequence="Ctrl+Shift+S">
+        sequence="Shift+Alt+G S">
   </key>
   <key
         commandId="org.jiayun.commons4e.lang.actions.GenerateCompareToAction"
         contextId="org.eclipse.jdt.ui.javaEditorScope"
         schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-        sequence="Ctrl+Shift+T">
+        sequence="Shift+Alt+G C">
+  </key>
+  <key
+        commandId="org.jiayun.commons4e.lang.actions.Commons4ELangMenu"
+        contextId="org.eclipse.jdt.ui.javaEditorScope"
+        schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+        sequence="Shift+Alt+G">
   </key>
 	</extension>
  <extension
@@ -82,6 +93,7 @@
           allPopups="false"
           locationURI="popup:org.eclipse.ui.popup.any?before=additions">
        <menu
+             commandId="org.jiayun.commons4e.lang.actions.Commons4ELangMenu"
              id="langMenu"
              label="Commons4E Lang">
           <command
