@@ -2,7 +2,7 @@
 <feature
       id="org.jiayun.commons4e"
       label="Commons4E"
-      version="1.1.11"
+      version="1.2.0"
       provider-name="JiaYun">
    <install-handler/>
 
@@ -103,10 +103,6 @@ Everyone is permitted to copy and distribute copies of this Agreement, but in or
 This Agreement is governed by the laws of the State of New York and the intellectual property laws of the United States of America. No party to this Agreement will bring a legal action under this Agreement more than one year after the cause of action arose. Each party waives its rights to a jury trial in any resulting litigation.
    </license>
 
-   <url>
-      <update label="Commons4E" url="http://commons4e.berlios.de/updatesite31"/>
-   </url>
-
    <requires>
       <import plugin="org.eclipse.ui"/>
       <import plugin="org.eclipse.core.resources"/>
@@ -120,7 +116,7 @@ This Agreement is governed by the laws of the State of New York and the intellec
          id="org.jiayun.commons4e"
          download-size="0"
          install-size="0"
-         version="0.0.0"
+         version="1.2.0"
          unpack="false"/>
 
 </feature>
